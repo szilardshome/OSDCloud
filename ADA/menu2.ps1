@@ -1,15 +1,3 @@
-function Write-SectionHeader {
-    param(
-        [string]$Message = ""
-    )
-    Write-Host " "
-    Write-Host "=============================================" -ForegroundColor Green
-    if (-not ([string]::IsNullOrEmpty($Message))) {
-        Write-Host "========== $Message ===============" -ForegroundColor Green
-    }
-    Write-Host "=============================================`n" -ForegroundColor Green
-}
-
 cls
 Write-Host "================ Main Menu ==================" -ForegroundColor Yellow
 Write-Host " "
@@ -32,17 +20,18 @@ switch ($input)
 {
     '1' {
         $OSName = 'Windows 11 24H2 x64'
-        $OSEdition = 'Enterprise'
-        $OSActivation = 'Volume'
-        $OSLanguage = 'en-US'
+        $OSEdition = 'Enterprise' # Changed to Enterprise as per menu
+        $OSActivation = 'Volume' # Or 'Volume' if using VLK
+        $OSLanguage = 'en-US' # Changed to en-US for consistency, en-EN is not a standard locale
+        #Set OSDCloud Vars
 
         $Global:MyOSDCloud = [ordered]@{
             Restart = [bool]$False
             RecoveryPartition = [bool]$true
             OEMActivation = [bool]$True
             WindowsUpdate = [bool]$true
-            WindowsUpdateDrivers = [bool]$true
-            WindowsDefenderUpdate = [bool]$true
+            WindowsUpdateDrivers = [bool]$false
+            WindowsDefenderUpdate = [bool]$false
             SetTimeZone = [bool]$true
             ClearDiskConfirm = [bool]$False
             ShutdownSetupComplete = [bool]$false
@@ -50,12 +39,9 @@ switch ($input)
             CheckSHA1 = [bool]$true
         }
 
-        Write-SectionHeader "OSDCloud Variables"
-        $Global:MyOSDCloud | Format-List | Out-String | Write-Host
-
+        #Region Custom Image - For Offline Installer
         $ESDName = 'windows11-24h2-en.esd'
         $ImageFileItem = Find-OSDCloudFile -Name $ESDName -Path '\OSDCloud\OS\'
-        
         if ($ImageFileItem) {
             $ImageFileItem = $ImageFileItem | Where-Object {$_.FullName -notlike "C*"} | Where-Object {$_.FullName -notlike "X*"} | Select-Object -First 1
             if ($ImageFileItem) {
@@ -66,30 +52,25 @@ switch ($input)
                 $Global:MyOSDCloud.ImageFileName = $ImageFileName
                 $Global:MyOSDCloud.ImageFileFullName = $ImageFileFullName
                 $Global:MyOSDCloud.OSImageIndex = 1
-                
-                Write-SectionHeader -Message "Starting OSDCloud Offline Installation for $OSLanguage"
-                Start-OSDCloud -ImageFileUrl $ImageFileItem.FullName -ImageIndex 1 -Zti -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
-                Write-SectionHeader -Message "OSDCloud Process Complete, Running Custom Actions From Script Before Reboot"
-            } else {
-                Write-Host "Error: Could not find a suitable image file for '$ESDName'." -ForegroundColor Red
             }
-        } else {
-            Write-Host "Error: The ESD file '$ESDName' was not found in '\OSDCloud\OS\'. Please ensure it exists." -ForegroundColor Red
         }
+        #Launch OSDCloud
+        Start-OSDCloud -ImageFileUrl $ImageFileItem -ImageIndex 1 -Zti
     }
     '2' {
         $OSName = 'Windows 11 24H2 x64'
-        $OSEdition = 'Enterprise'
-        $OSActivation = 'Volume'
-        $OSLanguage = 'de-DE'
+        $OSEdition = 'Enterprise' # Changed to Enterprise as per menu
+        $OSActivation = 'Volume' # Or 'Volume' if using VLK
+        $OSLanguage = 'de-DE' # Corrected to German
 
+        #Set OSDCloud Vars
         $Global:MyOSDCloud = [ordered]@{
             Restart = [bool]$False
             RecoveryPartition = [bool]$true
             OEMActivation = [bool]$True
             WindowsUpdate = [bool]$true
-            WindowsUpdateDrivers = [bool]$true
-            WindowsDefenderUpdate = [bool]$true
+            WindowsUpdateDrivers = [bool]$false
+            WindowsDefenderUpdate = [bool]$false
             SetTimeZone = [bool]$true
             ClearDiskConfirm = [bool]$False
             ShutdownSetupComplete = [bool]$false
@@ -98,11 +79,15 @@ switch ($input)
         }
 
         Write-SectionHeader "OSDCloud Variables"
-        $Global:MyOSDCloud | Format-List | Out-String | Write-Host
+        Write-Output $Global:MyOSDCloud
 
-        $ESDName = 'windows11-24h2-de.esd'
+        #Launch OSDCloud
+        Write-SectionHeader -Message "Starting OSDCloud"
+        Write-SectionHeader -Message "OSDCloud Process Complete, Running Custom Actions From Script Before Reboot"
+
+        #Region Custom Image - For Offline Installer
+        $ESDName = 'windows11-24h2-de.esd' # Corrected to German ESD
         $ImageFileItem = Find-OSDCloudFile -Name $ESDName -Path '\OSDCloud\OS\'
-        
         if ($ImageFileItem) {
             $ImageFileItem = $ImageFileItem | Where-Object {$_.FullName -notlike "C*"} | Where-Object {$_.FullName -notlike "X*"} | Select-Object -First 1
             if ($ImageFileItem) {
@@ -113,30 +98,24 @@ switch ($input)
                 $Global:MyOSDCloud.ImageFileName = $ImageFileName
                 $Global:MyOSDCloud.ImageFileFullName = $ImageFileFullName
                 $Global:MyOSDCloud.OSImageIndex = 1
-
-                Write-SectionHeader -Message "Starting OSDCloud Offline Installation for $OSLanguage"
-                Start-OSDCloud -ImageFileUrl $ImageFileItem.FullName -ImageIndex 1 -Zti -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
-                Write-SectionHeader -Message "OSDCloud Process Complete, Running Custom Actions From Script Before Reboot"
-            } else {
-                Write-Host "Error: Could not find a suitable image file for '$ESDName'." -ForegroundColor Red
             }
-        } else {
-            Write-Host "Error: The ESD file '$ESDName' was not found in '\OSDCloud\OS\'. Please ensure it exists." -ForegroundColor Red
         }
+        Start-OSDCloud -ImageFileUrl $ImageFileItem -ImageIndex 1 -Zti
     }
     '3' {
         $OSName = 'Windows 11 24H2 x64'
-        $OSEdition = 'Enterprise'
-        $OSActivation = 'Volume'
-        $OSLanguage = 'hu-HU'
+        $OSEdition = 'Enterprise' # Changed to Enterprise as per menu
+        $OSActivation = 'Volume' # Or 'Volume' if using VLK
+        $OSLanguage = 'hu-HU' # Corrected to Hungarian
 
+        #Set OSDCloud Vars
         $Global:MyOSDCloud = [ordered]@{
             Restart = [bool]$False
             RecoveryPartition = [bool]$true
             OEMActivation = [bool]$True
             WindowsUpdate = [bool]$true
-            WindowsUpdateDrivers = [bool]$true
-            WindowsDefenderUpdate = [bool]$true
+            WindowsUpdateDrivers = [bool]$false
+            WindowsDefenderUpdate = [bool]$false
             SetTimeZone = [bool]$true
             ClearDiskConfirm = [bool]$False
             ShutdownSetupComplete = [bool]$false
@@ -145,11 +124,14 @@ switch ($input)
         }
 
         Write-SectionHeader "OSDCloud Variables"
-        $Global:MyOSDCloud | Format-List | Out-String | Write-Host
+        Write-Output $Global:MyOSDCloud
 
-        $ESDName = 'windows11-24h2-hu.esd'
+        #Launch OSDCloud
+        Write-SectionHeader -Message "Starting OSDCloud"
+
+        #Region Custom Image - For Offline Installer
+        $ESDName = 'windows11-24h2-hu.esd' # Corrected to Hungarian ESD
         $ImageFileItem = Find-OSDCloudFile -Name $ESDName -Path '\OSDCloud\OS\'
-        
         if ($ImageFileItem) {
             $ImageFileItem = $ImageFileItem | Where-Object {$_.FullName -notlike "C*"} | Where-Object {$_.FullName -notlike "X*"} | Select-Object -First 1
             if ($ImageFileItem) {
@@ -160,31 +142,28 @@ switch ($input)
                 $Global:MyOSDCloud.ImageFileName = $ImageFileName
                 $Global:MyOSDCloud.ImageFileFullName = $ImageFileFullName
                 $Global:MyOSDCloud.OSImageIndex = 1
-                
-                Write-SectionHeader -Message "Starting OSDCloud Offline Installation for $OSLanguage"
-                Start-OSDCloud -ImageFileUrl $ImageFileItem.FullName -ImageIndex 1 -Zti -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
-                Write-SectionHeader -Message "OSDCloud Process Complete, Running Custom Actions From Script Before Reboot"
-            } else {
-                Write-Host "Error: Could not find a suitable image file for '$ESDName'." -ForegroundColor Red
             }
-        } else {
-            Write-Host "Error: The ESD file '$ESDName' was not found in '\OSDCloud\OS\'. Please ensure it exists." -ForegroundColor Red
         }
+        Start-OSDCloud -ImageFileUrl $ImageFileItem -ImageIndex 1 -Zti
     }
     '4' {
+        # Logic for Windows 11 24H2 | English | Enterprise | Online Installer
+        # This will likely involve downloading the OS image directly via OSDCloud
+        # Example (you'll need to confirm the exact OSDCloud commands for online installs):
         Write-Host "Starting Online Installation for Windows 11 24H2 English Enterprise..."
         $OSName = 'Windows 11 24H2 x64'
         $OSLanguage = 'en-US'
         $OSEdition = 'Enterprise'
         $OSActivation = 'Volume'
 
+        #Set OSDCloud Vars
         $Global:MyOSDCloud = [ordered]@{
             Restart = [bool]$False
             RecoveryPartition = [bool]$true
             OEMActivation = [bool]$True
             WindowsUpdate = [bool]$true
-            WindowsUpdateDrivers = [bool]$true
-            WindowsDefenderUpdate = [bool]$true
+            WindowsUpdateDrivers = [bool]$false
+            WindowsDefenderUpdate = [bool]$false
             SetTimeZone = [bool]$true
             ClearDiskConfirm = [bool]$False
             ShutdownSetupComplete = [bool]$false
@@ -193,26 +172,33 @@ switch ($input)
         }
 
         Write-SectionHeader "OSDCloud Variables"
-        $Global:MyOSDCloud | Format-List | Out-String | Write-Host
+        Write-Output $Global:MyOSDCloud
 
-        Write-SectionHeader -Message "Starting OSDCloud Online Installation for $OSLanguage"
+        #Launch OSDCloud
+        Write-SectionHeader -Message "Starting OSDCloud"
+        Write-Host "Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage"
         Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
         Write-SectionHeader -Message "OSDCloud Process Complete, Running Custom Actions From Script Before Reboot"
+
+        # Note: You'll need to adapt the OSDCloud parameters for online installation,
+        # typically you wouldn't specify an ESDName for online installs.
     }
     '5' {
+        # Logic for Windows 11 24H2 | German | Enterprise | Online Installer
         Write-Host "Starting Online Installation for Windows 11 24H2 German Enterprise..."
         $OSName = 'Windows 11 24H2 x64'
         $OSLanguage = 'de-DE'
         $OSEdition = 'Enterprise'
         $OSActivation = 'Volume'
 
+        #Set OSDCloud Vars
         $Global:MyOSDCloud = [ordered]@{
             Restart = [bool]$False
             RecoveryPartition = [bool]$true
             OEMActivation = [bool]$True
             WindowsUpdate = [bool]$true
-            WindowsUpdateDrivers = [bool]$true
-            WindowsDefenderUpdate = [bool]$true
+            WindowsUpdateDrivers = [bool]$false
+            WindowsDefenderUpdate = [bool]$false
             SetTimeZone = [bool]$true
             ClearDiskConfirm = [bool]$False
             ShutdownSetupComplete = [bool]$false
@@ -221,26 +207,29 @@ switch ($input)
         }
 
         Write-SectionHeader "OSDCloud Variables"
-        $Global:MyOSDCloud | Format-List | Out-String | Write-Host
+        Write-Output $Global:MyOSDCloud
 
-        Write-SectionHeader -Message "Starting OSDCloud Online Installation for $OSLanguage"
+        #Launch OSDCloud
+        Write-SectionHeader -Message "Starting OSDCloud"
+        Write-Host "Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage"
         Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
         Write-SectionHeader -Message "OSDCloud Process Complete, Running Custom Actions From Script Before Reboot"
     }
     '6' {
+        # Logic for Windows 11 24H2 | Hungarian | Enterprise | Online Installer
         Write-Host "Starting Online Installation for Windows 11 24H2 Hungarian Enterprise..."
         $OSName = 'Windows 11 24H2 x64'
         $OSLanguage = 'hu-HU'
         $OSEdition = 'Enterprise'
         $OSActivation = 'Volume'
-        
+        #Set OSDCloud Vars
         $Global:MyOSDCloud = [ordered]@{
             Restart = [bool]$False
             RecoveryPartition = [bool]$true
             OEMActivation = [bool]$True
             WindowsUpdate = [bool]$true
-            WindowsUpdateDrivers = [bool]$true
-            WindowsDefenderUpdate = [bool]$true
+            WindowsUpdateDrivers = [bool]$false
+            WindowsDefenderUpdate = [bool]$false
             SetTimeZone = [bool]$true
             ClearDiskConfirm = [bool]$False
             ShutdownSetupComplete = [bool]$false
@@ -249,9 +238,11 @@ switch ($input)
         }
 
         Write-SectionHeader "OSDCloud Variables"
-        $Global:MyOSDCloud | Format-List | Out-String | Write-Host
+        Write-Output $Global:MyOSDCloud
 
-        Write-SectionHeader -Message "Starting OSDCloud Online Installation for $OSLanguage"
+        #Launch OSDCloud
+        Write-SectionHeader -Message "Starting OSDCloud"
+        Write-Host "Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage"
         Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
         Write-SectionHeader -Message "OSDCloud Process Complete, Running Custom Actions From Script Before Reboot"
     }
