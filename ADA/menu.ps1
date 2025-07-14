@@ -39,11 +39,6 @@ switch ($input)
             CheckSHA1 = [bool]$true
         }
 
-        #Launch OSDCloud
-        Write-Host "Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage"
-        Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
-        Write-SectionHeader -Message "OSDCloud Process Complete, Running Custom Actions From Script Before Reboot"
-
         #Region Custom Image - For Offline Installer
         $ESDName = 'windows11-24h2-en.esd'
         $ImageFileItem = Find-OSDCloudFile -Name $ESDName -Path '\OSDCloud\OS\'
@@ -59,6 +54,10 @@ switch ($input)
                 $Global:MyOSDCloud.OSImageIndex = 1
             }
         }
+                #Launch OSDCloud
+        Write-Host "Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage"
+        Start-OSDCloud -ImageFileUrl $ImageFileItem -ImageIndex 1 -Zti
+        Write-SectionHeader -Message "OSDCloud Process Complete, Running Custom Actions From Script Before Reboot"
     }
     '2' {
         $OSName = 'Windows 11 24H2 x64'
