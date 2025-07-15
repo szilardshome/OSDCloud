@@ -129,6 +129,10 @@ switch ($input)
                 $Global:MyOSDCloud.OSImageIndex = 1
             }
         }
+        Write-Host "Creating $sourcePath..."
+            if (-not (Test-Path $sourcePath)) {
+            New-Item -Path $sourcePath -ItemType Directory | Out-Null
+            }
         # Move XAML definition and window display outside the button click event
         Add-Type -AssemblyName PresentationFramework
         [xml]$xaml =
