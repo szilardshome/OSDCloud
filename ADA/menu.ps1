@@ -1,3 +1,7 @@
+$sourcePath = "X:\Temp"
+$destinationPath = "C:\Temp"
+$fileName = "clientname.txt"
+$filePath = Join-Path -Path $sourcePath -ChildPath $fileName
 function Write-SectionHeader {
     [CmdletBinding()]
     param (
@@ -66,18 +70,28 @@ switch ($input)
                 $Global:MyOSDCloud.OSImageIndex = 1
             }
         }
+        Write-Host "Creating $sourcePath..."
+            if (-not (Test-Path $sourcePath)) {
+            New-Item -Path $sourcePath -ItemType Directory | Out-Null
+            }
+
+        #Prompt the user for the client name
+        $clientName = Read-Host "Please enter the client name"
+
+        #Save the client name to clientname.txt in X:\Temp
+        Set-Content -Path $filePath -Value $clientName
         #Launch OSDCloud
         Start-OSDCloud -ImageFileUrl $ImageFileItem -ImageIndex 1 -Zti
-        $tempPath = "C:\Temp"
-        if (-not (Test-Path $tempPath)) {
-            New-Item -Path $tempPath -ItemType Directory | Out-Null
+        try {
+            Move-Item -Path $sourcePath -Destination $destinationPath -Force -ErrorAction Stop
+            Write-Host "Successfully moved '$sourcePath' to '$destinationPath'."
+            Write-Host "Client name '$clientName' has been saved to $destinationPath\$fileName"
         }
-
-        # Prompt the user for the client name
-        $clientName = Read-Host "Please enter the client name:"
-
-        # Save the client name to a file in C:\Temp
-        Set-Content -Path "$tempPath\clientname.txt" -Value $clientName
+        catch {
+            Write-Error "Failed to move directory: $($_.Exception.Message)"
+            Write-Host "The client name is still saved at $filePath"
+        }
+        Restart-Computer -Force
     }
     '2' {
         $OSName = 'Windows 11 24H2 x64'
