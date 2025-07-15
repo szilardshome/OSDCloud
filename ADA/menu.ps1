@@ -1,3 +1,15 @@
+function Write-SectionHeader {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, Position = 0)]
+        [System.String]
+        $Message
+    )
+    Write-DarkGrayLine
+    Write-DarkGrayDate
+    Write-Host -ForegroundColor Cyan $Message
+}
+#============================================================
 cls
 Write-Host "================ Main Menu ==================" -ForegroundColor Yellow
 Write-Host " "
@@ -30,8 +42,8 @@ switch ($input)
             RecoveryPartition = [bool]$true
             OEMActivation = [bool]$True
             WindowsUpdate = [bool]$true
-            WindowsUpdateDrivers = [bool]$true
-            WindowsDefenderUpdate = [bool]$true
+            WindowsUpdateDrivers = [bool]$false
+            WindowsDefenderUpdate = [bool]$false
             SetTimeZone = [bool]$true
             ClearDiskConfirm = [bool]$False
             ShutdownSetupComplete = [bool]$false
@@ -54,10 +66,18 @@ switch ($input)
                 $Global:MyOSDCloud.OSImageIndex = 1
             }
         }
-                #Launch OSDCloud
-        Write-Host "Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage"
+        #Launch OSDCloud
         Start-OSDCloud -ImageFileUrl $ImageFileItem -ImageIndex 1 -Zti
-        Write-SectionHeader -Message "OSDCloud Process Complete, Running Custom Actions From Script Before Reboot"
+        $tempPath = "C:\Temp"
+        if (-not (Test-Path $tempPath)) {
+            New-Item -Path $tempPath -ItemType Directory | Out-Null
+        }
+
+        # Prompt the user for the client name
+        $clientName = Read-Host "Please enter the client name:"
+
+        # Save the client name to a file in C:\Temp
+        Set-Content -Path "$tempPath\clientname.txt" -Value $clientName
     }
     '2' {
         $OSName = 'Windows 11 24H2 x64'
@@ -71,8 +91,8 @@ switch ($input)
             RecoveryPartition = [bool]$true
             OEMActivation = [bool]$True
             WindowsUpdate = [bool]$true
-            WindowsUpdateDrivers = [bool]$true
-            WindowsDefenderUpdate = [bool]$true
+            WindowsUpdateDrivers = [bool]$false
+            WindowsDefenderUpdate = [bool]$false
             SetTimeZone = [bool]$true
             ClearDiskConfirm = [bool]$False
             ShutdownSetupComplete = [bool]$false
@@ -85,8 +105,6 @@ switch ($input)
 
         #Launch OSDCloud
         Write-SectionHeader -Message "Starting OSDCloud"
-        Write-Host "Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage"
-        Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
         Write-SectionHeader -Message "OSDCloud Process Complete, Running Custom Actions From Script Before Reboot"
 
         #Region Custom Image - For Offline Installer
@@ -104,6 +122,7 @@ switch ($input)
                 $Global:MyOSDCloud.OSImageIndex = 1
             }
         }
+        Start-OSDCloud -ImageFileUrl $ImageFileItem -ImageIndex 1 -Zti
     }
     '3' {
         $OSName = 'Windows 11 24H2 x64'
@@ -117,8 +136,8 @@ switch ($input)
             RecoveryPartition = [bool]$true
             OEMActivation = [bool]$True
             WindowsUpdate = [bool]$true
-            WindowsUpdateDrivers = [bool]$true
-            WindowsDefenderUpdate = [bool]$true
+            WindowsUpdateDrivers = [bool]$false
+            WindowsDefenderUpdate = [bool]$false
             SetTimeZone = [bool]$true
             ClearDiskConfirm = [bool]$False
             ShutdownSetupComplete = [bool]$false
@@ -131,9 +150,6 @@ switch ($input)
 
         #Launch OSDCloud
         Write-SectionHeader -Message "Starting OSDCloud"
-        Write-Host "Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage"
-        Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
-        Write-SectionHeader -Message "OSDCloud Process Complete, Running Custom Actions From Script Before Reboot"
 
         #Region Custom Image - For Offline Installer
         $ESDName = 'windows11-24h2-hu.esd' # Corrected to Hungarian ESD
@@ -150,6 +166,7 @@ switch ($input)
                 $Global:MyOSDCloud.OSImageIndex = 1
             }
         }
+        Start-OSDCloud -ImageFileUrl $ImageFileItem -ImageIndex 1 -Zti
     }
     '4' {
         # Logic for Windows 11 24H2 | English | Enterprise | Online Installer
@@ -167,8 +184,8 @@ switch ($input)
             RecoveryPartition = [bool]$true
             OEMActivation = [bool]$True
             WindowsUpdate = [bool]$true
-            WindowsUpdateDrivers = [bool]$true
-            WindowsDefenderUpdate = [bool]$true
+            WindowsUpdateDrivers = [bool]$false
+            WindowsDefenderUpdate = [bool]$false
             SetTimeZone = [bool]$true
             ClearDiskConfirm = [bool]$False
             ShutdownSetupComplete = [bool]$false
@@ -181,7 +198,6 @@ switch ($input)
 
         #Launch OSDCloud
         Write-SectionHeader -Message "Starting OSDCloud"
-        Write-Host "Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage"
         Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
         Write-SectionHeader -Message "OSDCloud Process Complete, Running Custom Actions From Script Before Reboot"
 
@@ -202,8 +218,8 @@ switch ($input)
             RecoveryPartition = [bool]$true
             OEMActivation = [bool]$True
             WindowsUpdate = [bool]$true
-            WindowsUpdateDrivers = [bool]$true
-            WindowsDefenderUpdate = [bool]$true
+            WindowsUpdateDrivers = [bool]$false
+            WindowsDefenderUpdate = [bool]$false
             SetTimeZone = [bool]$true
             ClearDiskConfirm = [bool]$False
             ShutdownSetupComplete = [bool]$false
@@ -216,7 +232,6 @@ switch ($input)
 
         #Launch OSDCloud
         Write-SectionHeader -Message "Starting OSDCloud"
-        Write-Host "Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage"
         Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
         Write-SectionHeader -Message "OSDCloud Process Complete, Running Custom Actions From Script Before Reboot"
     }
@@ -234,7 +249,7 @@ switch ($input)
             OEMActivation = [bool]$True
             WindowsUpdate = [bool]$true
             WindowsUpdateDrivers = [bool]$true
-            WindowsDefenderUpdate = [bool]$true
+            WindowsDefenderUpdate = [bool]$false
             SetTimeZone = [bool]$true
             ClearDiskConfirm = [bool]$False
             ShutdownSetupComplete = [bool]$false
@@ -247,7 +262,6 @@ switch ($input)
 
         #Launch OSDCloud
         Write-SectionHeader -Message "Starting OSDCloud"
-        Write-Host "Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage"
         Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
         Write-SectionHeader -Message "OSDCloud Process Complete, Running Custom Actions From Script Before Reboot"
     }
