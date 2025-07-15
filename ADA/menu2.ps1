@@ -1,3 +1,19 @@
+$sourcePath = "X:\Temp"
+$destinationPath = "C:\Temp"
+$fileName = "clientname.txt"
+$filePath = Join-Path -Path $sourcePath -ChildPath $fileName
+function Write-SectionHeader {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, Position = 0)]
+        [System.String]
+        $Message
+    )
+    Write-DarkGrayLine
+    Write-DarkGrayDate
+    Write-Host -ForegroundColor Cyan $Message
+}
+#============================================================
 cls
 Write-Host "================ Main Menu ==================" -ForegroundColor Yellow
 Write-Host " "
@@ -54,16 +70,36 @@ switch ($input)
                 $Global:MyOSDCloud.OSImageIndex = 1
             }
         }
+        Write-Host "Creating $sourcePath..."
+            if (-not (Test-Path $sourcePath)) {
+            New-Item -Path $sourcePath -ItemType Directory | Out-Null
+            }
+
+        #Prompt the user for the client name
+        $clientName = Read-Host "Please enter the client name"
+
+        #Save the client name to clientname.txt in X:\Temp
+        Set-Content -Path $filePath -Value $clientName
         #Launch OSDCloud
         Start-OSDCloud -ImageFileUrl $ImageFileItem -ImageIndex 1 -Zti
+        try {
+            Move-Item -Path $sourcePath -Destination $destinationPath -Force -ErrorAction Stop
+            Write-Host "Successfully moved '$sourcePath' to '$destinationPath'."
+            Write-Host "Client name '$clientName' has been saved to $destinationPath\$fileName"
+        }
+        catch {
+            Write-Error "Failed to move directory: $($_.Exception.Message)"
+            Write-Host "The client name is still saved at $filePath"
+        }
+        Restart-Computer -Force
     }
     '2' {
         $OSName = 'Windows 11 24H2 x64'
         $OSEdition = 'Enterprise' # Changed to Enterprise as per menu
         $OSActivation = 'Volume' # Or 'Volume' if using VLK
-        $OSLanguage = 'de-DE' # Corrected to German
-
+        $OSLanguage = 'de-DE' # Changed to en-US for consistency, en-EN is not a standard locale
         #Set OSDCloud Vars
+
         $Global:MyOSDCloud = [ordered]@{
             Restart = [bool]$False
             RecoveryPartition = [bool]$true
@@ -78,15 +114,8 @@ switch ($input)
             CheckSHA1 = [bool]$true
         }
 
-        Write-SectionHeader "OSDCloud Variables"
-        Write-Output $Global:MyOSDCloud
-
-        #Launch OSDCloud
-        Write-SectionHeader -Message "Starting OSDCloud"
-        Write-SectionHeader -Message "OSDCloud Process Complete, Running Custom Actions From Script Before Reboot"
-
         #Region Custom Image - For Offline Installer
-        $ESDName = 'windows11-24h2-de.esd' # Corrected to German ESD
+        $ESDName = 'windows11-24h2-de.esd'
         $ImageFileItem = Find-OSDCloudFile -Name $ESDName -Path '\OSDCloud\OS\'
         if ($ImageFileItem) {
             $ImageFileItem = $ImageFileItem | Where-Object {$_.FullName -notlike "C*"} | Where-Object {$_.FullName -notlike "X*"} | Select-Object -First 1
@@ -100,7 +129,57 @@ switch ($input)
                 $Global:MyOSDCloud.OSImageIndex = 1
             }
         }
+        # Move XAML definition and window display outside the button click event
+        Add-Type -AssemblyName PresentationFramework
+        [xml]$xaml =
+        @"
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        Title="Let's do automation" Height="auto" Width="auto" SizeToContent="WidthAndHeight" Topmost="True"
+        WindowStartupLocation="CenterScreen" >
+    <StackPanel Orientation="Vertical">
+        <GroupBox Header="Configure computer name">
+            <StackPanel Orientation="Vertical">
+                <TextBlock>
+                    Name:    
+                </TextBlock>
+                <TextBox Name="input_computer_name" />
+                <Button Name="button_join_and_rename" Content="Rename" />
+            </StackPanel>
+        </GroupBox>
+    </StackPanel>
+</Window>
+"@
+        $window = [Windows.Markup.XamlReader]::Load((New-Object System.Xml.XmlNodeReader $xaml))
+
+        $input_computer_name = $window.FindName('input_computer_name')
+
+        $window.FindName('button_join_and_rename').Add_Click(
+            {
+                # This code will execute when the button is clicked
+                $clientName = $input_computer_name.Text
+                Set-Content -Path $filePath -Value $clientName
+                # Optionally, close the window after setting the content
+                $window.Close()
+            }
+        )
+        # Show the window here so the user can interact with it
+        $window.ShowDialog()
+
+        #Launch OSDCloud
         Start-OSDCloud -ImageFileUrl $ImageFileItem -ImageIndex 1 -Zti
+        try {
+            Move-Item -Path $sourcePath -Destination $destinationPath -Force -ErrorAction Stop
+            Write-Host "Successfully moved '$sourcePath' to '$destinationPath'."
+            Write-Host "Client name '$clientName' has been saved to $destinationPath\$fileName"
+        }
+        catch {
+            Write-Error "Failed to move directory: $($_.Exception.Message)"
+            Write-Host "The client name is still saved at $filePath"
+        }
+        Restart-Computer -Force
     }
     '3' {
         $OSName = 'Windows 11 24H2 x64'
@@ -176,7 +255,6 @@ switch ($input)
 
         #Launch OSDCloud
         Write-SectionHeader -Message "Starting OSDCloud"
-        Write-Host "Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage"
         Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
         Write-SectionHeader -Message "OSDCloud Process Complete, Running Custom Actions From Script Before Reboot"
 
@@ -211,7 +289,6 @@ switch ($input)
 
         #Launch OSDCloud
         Write-SectionHeader -Message "Starting OSDCloud"
-        Write-Host "Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage"
         Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
         Write-SectionHeader -Message "OSDCloud Process Complete, Running Custom Actions From Script Before Reboot"
     }
@@ -228,7 +305,7 @@ switch ($input)
             RecoveryPartition = [bool]$true
             OEMActivation = [bool]$True
             WindowsUpdate = [bool]$true
-            WindowsUpdateDrivers = [bool]$false
+            WindowsUpdateDrivers = [bool]$true
             WindowsDefenderUpdate = [bool]$false
             SetTimeZone = [bool]$true
             ClearDiskConfirm = [bool]$False
@@ -242,7 +319,6 @@ switch ($input)
 
         #Launch OSDCloud
         Write-SectionHeader -Message "Starting OSDCloud"
-        Write-Host "Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage"
         Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
         Write-SectionHeader -Message "OSDCloud Process Complete, Running Custom Actions From Script Before Reboot"
     }
