@@ -164,9 +164,9 @@ switch ($input)
                 $clientName = $input_computer_name.Text
                 $UnattendXmlContent = @"
 <?xml version="1.0" encoding="utf-8"?>
-<unattend xmlns="urn:schemas-microsoft-com:unattend">
-    <settings pass="specialize">
-        <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+<unattend xmlns="urn:schemas-microsoft-com:unattend" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">
+	<settings pass="specialize">
+		<component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
             <ComputerName>$clientName</ComputerName>
         </component>
     </settings>
@@ -190,7 +190,7 @@ switch ($input)
             Write-Host "The client name is still saved at $filePath"
         }
         $UnattendXmlContent | Out-File -FilePath $UnattendedPath -Encoding UTF8 -Force
-        Restart-Computer -Force
+        #Restart-Computer -Force
     }
     '3' {
         $OSName = 'Windows 11 24H2 x64'
