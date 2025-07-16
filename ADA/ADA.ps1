@@ -93,7 +93,6 @@ Write-Host "=============================================" -ForegroundColor Yell
 Write-Host "========== ADA Mobelfabrik GMBH =============" -ForegroundColor Yellow
 Write-Host "=============================================`n" -ForegroundColor Yellow
 
----
 ## Automatic ADA.ppkg Download
 
 # --- ADA.ppkg Download Logic (runs automatically) ---
@@ -145,7 +144,6 @@ if ($null -eq $DestinationPath) {
     }
 }
 
----
 ## Main Menu Options
 
 # --- Download complete, now display the menu and get user input ---
