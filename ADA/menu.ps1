@@ -103,7 +103,7 @@ switch ($input)
             Restart = [bool]$False
             RecoveryPartition = [bool]$true
             OEMActivation = [bool]$True
-            WindowsUpdate = [bool]$false
+            WindowsUpdate = [bool]$true
             WindowsUpdateDrivers = [bool]$false
             WindowsDefenderUpdate = [bool]$false
             SetTimeZone = [bool]$true
@@ -172,7 +172,6 @@ switch ($input)
     </settings>
 </unattend>
 "@
-                $UnattendXmlContent | Out-File -FilePath $UnattendedPath -Encoding UTF8 -Force
                 $window.Close()
             }
         )
@@ -190,6 +189,7 @@ switch ($input)
             Write-Error "Failed to move directory: $($_.Exception.Message)"
             Write-Host "The client name is still saved at $filePath"
         }
+        $UnattendXmlContent | Out-File -FilePath $UnattendedPath -Encoding UTF8 -Force
         Restart-Computer -Force
     }
     '3' {
