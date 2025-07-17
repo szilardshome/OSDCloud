@@ -146,26 +146,21 @@ Write-Host "=============================================`n" -ForegroundColor Ye
 
 ## Main Menu Options
 
-Write-Host "Updating Surface Driver Catalog..."
-# copy MicrosoftDriverPackCatalog.json from older OSD version
-$MSDPCatalog = 'https://raw.githubusercontent.com/OSDeploy/OSD/4a6a9e786b47b5fbe1df902ce4280ddd740ba092/Catalogs/MicrosoftDriverPackCatalog.json'
-$ModuleBase = (Get-Module -Name OSD -ListAvailable | Sort-Object Version -Descending | Select-Object -First 1).ModuleBase
-Invoke-WebRequest -Uri $MSDPCatalog -OutFile (Join-Path $ModuleBase 'Catalogs/MicrosoftDriverPackCatalog.json')
-irm 'https://raw.githubusercontent.com/everydayintech/OSDCloud-Public/refs/heads/main/Catalogs/Update-OSDCloudSurfaceDriverCatalogJustInTime.ps1' | iex
-Update-OSDCloudSurfaceDriverCatalogJustInTime -UpdateDriverPacksJson
-
-
 # --- Download complete, now display the menu and get user input ---
 Write-Host "`n" # Empty line before the menu
 Write-Host "1: Windows 11 24H2 | English | Enterprise | Offline Installer" -ForegroundColor Yellow
-Write-Host "2: Windows 11 24H2 | German | Enterprise | Offline Installer" -ForegroundColor Yellow
-Write-Host "3: Windows 11 24H2 | Hungarian | Enterprise | Offline Installer" -ForegroundColor Yellow
-Write-Host "4: Windows 11 24H2 | English | Enterprise | Online Installer" -ForegroundColor Yellow
-Write-Host "5: Windows 11 24H2 | German | Enterprise | Online Installer" -ForegroundColor Yellow
-Write-Host "6: Windows 11 24H2 | Hungarian | Enterprise | Online Installer" -ForegroundColor Yellow
-Write-Host "7: Exit`n"-ForegroundColor Yellow
+Write-Host "2: Windows 11 24H2 | English | Enterprise | Offline Installer | Windows&Driver Updates" -ForegroundColor Red
+Write-Host "3: Windows 11 24H2 | German | Enterprise | Offline Installer" -ForegroundColor Yellow
+Write-Host "4: Windows 11 24H2 | German | Enterprise | Offline Installer | Windows&Driver Updates" -ForegroundColor Red
+Write-Host "5: Windows 11 24H2 | Hungarian | Enterprise | Offline Installer" -ForegroundColor Yellow
+Write-Host "6: Windows 11 24H2 | Hungarian | Enterprise | Offline Installer | Windows&Driver Updates" -ForegroundColor Red
+Write-Host "7: Windows 11 24H2 | English | Enterprise | Online Installer" -ForegroundColor Yellow
+Write-Host "8: Windows 11 24H2 | German | Enterprise | Online Installer" -ForegroundColor Yellow
+Write-Host "9: Windows 11 24H2 | Hungarian | Enterprise | Online Installer" -ForegroundColor Yellow
+Write-Host "10: Exit`n"-ForegroundColor Yellow
 
-Write-Host "`n DISCLAIMER: USE AT YOUR OWN RISK - Going further will erase all data on your disk ! `n"-ForegroundColor Red
+Write-Host "`n Windows Update and Driver Updates can take up to 30min!!! `n"-ForegroundColor Red
+Write-Host "`n If You need any help please go to: Confluence > IT System x86 > NinjaOne > OS Deployment `n"-ForegroundColor Red
 
 $input = Read-Host "Please make a selection"
 
