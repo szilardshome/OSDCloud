@@ -1,28 +1,34 @@
+#Change Display Resolution for Virtual Machine
+if ((Get-MyComputerModel) -match 'Virtual') {
+    Write-Host  -ForegroundColor Cyan "Setting Display Resolution to 1600x"
+    Set-DisRes 1600
+}
+
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
-# --- Loggoló függvény (a GUI szkripthez) ---
+
+# --- Logging Function for GUI ---
 function Log-Message {
     param(
         [string]$Message,
         [string]$Level = "INFO" # INFO, WARNING, ERROR, CRITICAL
     )
-    $logFile = "C:\Temp\gui-log.txt" # Külön logfájl a GUI eseményeknek
+    $logFile = "C:\Temp\gui-log.txt" # Separate log file for GUI events
     $timestamp = (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
     $logEntry = "$timestamp [$Level] $Message"
 
     try {
-        Add-Content -Path $logFile -Value $logEntry -ErrorAction SilentlyContinue # Ne szakítsa meg a GUI-t hiba esetén
+        Add-Content -Path $logFile -Value $logEntry -ErrorAction SilentlyContinue # Do not interrupt GUI on error
     } catch {
-        # Ha a logfájlba írás sikertelen, akkor legalább a konzolra írjuk ki.
-        Write-Error "HIBA: Nem sikerült a logfájlba írni (GUI): $($_.Exception.Message) - Üzenet: $logEntry"
+        # If logging to file fails, at least write to console.
+        Write-Error "ERROR: Failed to write to log file (GUI): $($_.Exception.Message) - Message: $logEntry"
     }
 }
-# --- Loggoló függvény vége ---
+# --- End Logging Function ---
 
 
-# Placeholder functions (YOU NEED TO DEFINE THESE PROPERLY)
-# Include these function definitions if they are not already defined elsewhere
+# --- Console Header Functions ---
 function Write-DarkGrayLine {
     Write-Host "==================================================" -ForegroundColor DarkGray
 }
@@ -42,20 +48,11 @@ function Write-SectionHeader {
     Write-DarkGrayDate
     Write-Host -ForegroundColor Cyan $Message
 }
+# --- End Console Header Functions ---
+
 
 # --- GUI Function Definition ---
 function Show-DeploymentGUI {
-    param(
-        # These parameters are now available for the main script to potentially use
-        [ref]$ComputerName,
-        [ref]$OrganizationUnit,
-        [ref]$Region,
-        [ref]$TimeZoneID,
-        [ref]$Role,
-        [ref]$SelectedSoftwareNames,
-        [ref]$KeyboardLayouts,
-        [ref]$HomeLocation
-    )
 
     $form = New-Object System.Windows.Forms.Form
     $form.Text = "ADA Windows Deployment - Data Entry"
@@ -85,12 +82,12 @@ function Show-DeploymentGUI {
         $pictureBox.Image = $bitmap
         $graphics.Dispose()
     }
-    $pictureBox.SizeMode = [System.Windows.Forms.PictureBoxSizeMode]::StretchImage # Kép méretre igazítása
-    $pictureBox.Size = New-Object System.Drawing.Size(400, 400) # Logó mérete 400x400-ra
+    $pictureBox.SizeMode = [System.Windows.Forms.PictureBoxSizeMode]::StretchImage # Adjust image to size
+    $pictureBox.Size = New-Object System.Drawing.Size(400, 400) # Logo size 400x400
 
-    # Logó pozíciójának beállítása: középen felül
+    # Set logo position: centered at the top
     $logoX = ([int]($form.ClientSize.Width - $pictureBox.Width) / 2)
-    $logoY = 10 # Kis távolság a felső széltől
+    $logoY = 10 # Small distance from top edge
     $pictureBox.Location = New-Object System.Drawing.Point($logoX, $logoY)
     $form.Controls.Add($pictureBox)
 
@@ -118,14 +115,14 @@ function Show-DeploymentGUI {
     $labelComputerName.BackColor = [System.Drawing.Color]::Transparent
     $form.Controls.Add($labelComputerName)
 
-    # Számítógép név beviteli mező
+    # Computer Name input field
     $textBoxComputerName = New-Object System.Windows.Forms.TextBox
     $textBoxComputerName.Location = New-Object System.Drawing.Point(($leftColumnStartX + 120), ($currentY_OS - 3))
     $textBoxComputerName.Size = New-Object System.Drawing.Size(200, 20)
     $form.Controls.Add($textBoxComputerName)
     $currentY_OS += 40
 
-    # Szervezeti egység címke
+    # Organization Unit Label
     $labelOrgUnit = New-Object System.Windows.Forms.Label
     $labelOrgUnit.Text = "Organization Unit:"
     $labelOrgUnit.Location = New-Object System.Drawing.Point($leftColumnStartX, ($currentY_OS - 3))
@@ -133,7 +130,7 @@ function Show-DeploymentGUI {
     $labelOrgUnit.BackColor = [System.Drawing.Color]::Transparent
     $form.Controls.Add($labelOrgUnit)
 
-    # Szervezeti egység legördülő menü
+    # Organization Unit dropdown menu
     $comboBoxOrgUnit = New-Object System.Windows.Forms.ComboBox
     $comboBoxOrgUnit.Location = New-Object System.Drawing.Point(($leftColumnStartX + 120), ($currentY_OS - 3))
     $comboBoxOrgUnit.Size = New-Object System.Drawing.Size(200, 20)
@@ -149,7 +146,7 @@ function Show-DeploymentGUI {
     $form.Controls.Add($comboBoxOrgUnit)
     $currentY_OS += 40
 
-    # Régió címke
+    # Region Label
     $labelRegion = New-Object System.Windows.Forms.Label
     $labelRegion.Text = "Region:"
     $labelRegion.Location = New-Object System.Drawing.Point($leftColumnStartX, ($currentY_OS - 3))
@@ -157,7 +154,7 @@ function Show-DeploymentGUI {
     $labelRegion.BackColor = [System.Drawing.Color]::Transparent
     $form.Controls.Add($labelRegion)
 
-    # Régió legördülő menü
+    # Region dropdown menu
     $comboBoxRegion = New-Object System.Windows.Forms.ComboBox
     $comboBoxRegion.Location = New-Object System.Drawing.Point(($leftColumnStartX + 120), ($currentY_OS - 3))
     $comboBoxRegion.Size = New-Object System.Drawing.Size(200, 20)
@@ -166,7 +163,7 @@ function Show-DeploymentGUI {
     $form.Controls.Add($comboBoxRegion)
     $currentY_OS += 40
 
-    # Időzóna címke
+    # Time Zone Label
     $labelTimeZone = New-Object System.Windows.Forms.Label
     $labelTimeZone.Text = "Time Zone:"
     $labelTimeZone.Location = New-Object System.Drawing.Point($leftColumnStartX, ($currentY_OS - 3))
@@ -174,7 +171,7 @@ function Show-DeploymentGUI {
     $labelTimeZone.BackColor = [System.Drawing.Color]::Transparent
     $form.Controls.Add($labelTimeZone)
 
-    # Időzóna legördülő menü
+    # Time Zone dropdown menu
     $comboBoxTimeZone = New-Object System.Windows.Forms.ComboBox
     $comboBoxTimeZone.Location = New-Object System.Drawing.Point(($leftColumnStartX + 120), ($currentY_OS - 3))
     $comboBoxTimeZone.Size = New-Object System.Drawing.Size(200, 20)
@@ -183,7 +180,7 @@ function Show-DeploymentGUI {
     $form.Controls.Add($comboBoxTimeZone)
     $currentY_OS += 40
 
-    # Role címke
+    # Role Label
     $labelRole = New-Object System.Windows.Forms.Label
     $labelRole.Text = "Role:"
     $labelRole.Location = New-Object System.Drawing.Point($leftColumnStartX, ($currentY_OS - 3))
@@ -191,7 +188,7 @@ function Show-DeploymentGUI {
     $labelRole.BackColor = [System.Drawing.Color]::Transparent
     $form.Controls.Add($labelRole)
 
-    # Role legördülő menü
+    # Role dropdown menu
     $comboBoxRole = New-Object System.Windows.Forms.ComboBox
     $comboBoxRole.Location = New-Object System.Drawing.Point(($leftColumnStartX + 120), ($currentY_OS - 3))
     $comboBoxRole.Size = New-Object System.Drawing.Size(200, 20)
@@ -537,24 +534,12 @@ function Show-DeploymentGUI {
 
     $form.ShowDialog() # Display the GUI and wait for user interaction
 
-    # Pass values back using ref parameters
-    if ($form.DialogResult -eq [System.Windows.Forms.DialogResult]::OK) {
-        $ComputerName.Value = $textBoxComputerName.Text.Trim()
-        $OrganizationUnit.Value = $comboBoxOrgUnit.SelectedItem
-        $Region.Value = $region_display_name # Use the display name from the combobox
-        $TimeZoneID.Value = $timeZoneID # Use the mapped ID
-        $Role.Value = $role_selected
-        $SelectedSoftwareNames.Value = $selectedProgramsLocal
-        $KeyboardLayouts.Value = $keyboardLayoutsArray
-        $HomeLocation.Value = $homeLocationCode
-        return $true # Indicate that data was successfully collected
-    } else {
-        return $false # Indicate that user cancelled or an error occurred
-    }
+    return ($form.DialogResult -eq [System.Windows.Forms.DialogResult]::OK)
 }
 # --- End GUI Function Definition ---
 
 
+# --- OSDCloud Installation Function ---
 function Invoke-OSDCloudInstallation {
     param (
         [Parameter(Mandatory = $true)]
@@ -566,18 +551,17 @@ function Invoke-OSDCloudInstallation {
         [string]$ESDName = $null # Only required for offline
     )
 
-    # Global variables from GUI will now be used (if you integrate them into OSDCloud)
-    # For now, these are just for demonstration purposes that the data is available.
-    Write-Host "OSDCloud will now proceed with installation using GUI-provided data (not directly integrated here):" -ForegroundColor DarkYellow
-    Write-Host "  Computer Name: $($global:guiComputerName)" -ForegroundColor DarkYellow
-    Write-Host "  Organization Unit: $($global:guiOrgUnit)" -ForegroundColor DarkYellow
-    Write-Host "  Region: $($global:guiRegion)" -ForegroundColor DarkYellow
-    Write-Host "  Time Zone ID: $($global:guiTimeZoneID)" -ForegroundColor DarkYellow
-    Write-Host "  Role: $($global:guiRole)" -ForegroundColor DarkYellow
-    Write-Host "  Selected Software: $($global:guiSelectedSoftware -join ', ')" -ForegroundColor DarkYellow
-    Write-Host "  Keyboard Layouts: $($global:guiKeyboardLayouts -join ', ')" -ForegroundColor DarkYellow
-    Write-Host "  Home Location: $($global:guiHomeLocation)" -ForegroundColor DarkYellow
-    Write-Host ""
+    # Ensure OSDCloud module is imported (adjust if your OSDCloud is a script, not a module)
+    # This assumes the OSDCloud module is installed (e.g., via Install-Module OSDCloud)
+    # If OSDCloud functions are in a separate script file, you'd dot-source it here:
+    # . "C:\Path\To\Your\OSDCloudFunctions.ps1"
+    try {
+        Import-Module OSDCloud -ErrorAction Stop
+        Write-Host "OSDCloud module loaded successfully." -ForegroundColor Green
+    } catch {
+        Write-Error "ERROR: OSDCloud module could not be loaded. Please ensure it is installed. $($_.Exception.Message)"
+        return $false
+    }
 
 
     $OSName = 'Windows 11 24H2 x64'
@@ -585,91 +569,68 @@ function Invoke-OSDCloudInstallation {
     $OSActivation = 'Volume'
 
     # Set OSDCloud Global Variables
+    # These are standard OSDCloud parameters. Adjust as needed for your environment.
     $Global:MyOSDCloud = [ordered]@{
-        Restart               = [bool]$False
+        Restart               = [bool]$False # OSDCloud usually handles restarts, setting to False for control
         RecoveryPartition     = [bool]$true
         OEMActivation         = [bool]$True
         WindowsUpdate         = [bool]$false
         WindowsUpdateDrivers  = [bool]$false
         WindowsDefenderUpdate = [bool]$false
-        SetTimeZone           = [bool]$false # This will be set by external script or GUI data
+        SetTimeZone           = [bool]$false # TimeZone will be set by a later script based on GUI data
         ClearDiskConfirm      = [bool]$False
         ShutdownSetupComplete = [bool]$false
         SyncMSUpCatDriverUSB  = [bool]$true
         CheckSHA1             = [bool]$true
     }
 
-    # You might want to update MyOSDCloud variables with GUI data here, e.g.:
-    # if (-not [string]::IsNullOrEmpty($global:guiTimeZoneID)) {
-    #     $Global:MyOSDCloud.SetTimeZone = [bool]$true
-    #     $Global:MyOSDCloud.TimeZone = $global:guiTimeZoneID # Assuming OSDCloud accepts this directly
-    # }
-    # Also for Computer Name, OU, etc., depending on how OSDCloud uses them.
-
-
     Write-SectionHeader "OSDCloud Variables for $($OSLanguage) $($Type) Installation"
     Write-Output $Global:MyOSDCloud
 
     Write-SectionHeader -Message "Starting OSDCloud for $($OSLanguage) $($Type) Installation"
 
-    # NOTE: The actual OSDCloud functions (Find-OSDCloudFile, Start-OSDCloud)
-    # are placeholders. Ensure you have the OSDCloud module installed and imported
-    # or the actual functions defined for this section to work.
-
-    if ($Type -eq 'Offline') {
-        if (-not $ESDName) {
-            Write-Host "Error: ESDName is required for offline installation." -ForegroundColor Red
-            return
-        }
-        $imageFilePath = '\OSDCloud\OS\' # Consider making this configurable
-        # Example of how to call placeholder functions for OSDCloud
-        # You'll need the actual OSDCloud module or definition for these.
-        # $ImageFileItem = Find-OSDCloudFile -Name $ESDName -Path $imageFilePath
-
-        # --- Placeholder for OSDCloud logic START ---
-        Write-Host "Simulating Find-OSDCloudFile for $ESDName..." -ForegroundColor DarkCyan
-        $ImageFileItem = $true # Simulate finding the file for demonstration
-        # --- Placeholder for OSDCloud logic END ---
-
-
-        if ($ImageFileItem) {
-            # $ImageFileItem = $ImageFileItem | Where-Object {$_.FullName -notlike "X*"} | Select-Object -First 1
-            # For placeholder, just assume it's valid
-            $ImageFileItem = [PSCustomObject]@{
-                FullName = "C:\OSDCloud\OS\$ESDName" # Simulate a path
+    try {
+        if ($Type -eq 'Offline') {
+            if (-not $ESDName) {
+                Write-Host "Error: ESDName is required for offline installation." -ForegroundColor Red
+                return $false # Indicate failure
             }
+            $imageFilePath = '\OSDCloud\OS\' # This should be a network share path accessible in WinPE
+
+            Write-Host "Searching for OSDCloud image file: $ESDName at $imageFilePath" -ForegroundColor Cyan
+            $ImageFileItem = Find-OSDCloudFile -Name $ESDName -Path $imageFilePath -ErrorAction Stop
 
             if ($ImageFileItem) {
+                # OSDCloud's Start-OSDCloud expects an ImageFileItem object or path.
+                # Assuming $ImageFileItem is the result of Find-OSDCloudFile
                 $Global:MyOSDCloud.ImageFileItem = $ImageFileItem
-                $Global:MyOSDCloud.ImageFileName = Split-Path -Path $ImageFileItem.FullName -Leaf
+                $Global:MyOSDCloud.ImageFileName = $ImageFileItem.Name
                 $Global:MyOSDCloud.ImageFileFullName = $ImageFileItem.FullName
-                $Global:MyOSDCloud.OSImageIndex = 1
+                $Global:MyOSDCloud.OSImageIndex = 1 # Assuming default index 1, adjust if needed
 
-                # --- Placeholder for OSDCloud logic START ---
-                Write-Host "Simulating Start-OSDCloud -ImageFileUrl $($ImageFileItem.FullName) -ImageIndex 1 -Zti..." -ForegroundColor DarkCyan
-                Start-Sleep -Seconds 3 # Simulate work
-                # --- Placeholder for OSDCloud logic END ---
-
-                Write-SectionHeader -Message "OSDCloud Process Complete for Offline Installation, Rebooting"
-                # Restart-Computer -Force # Uncomment this in a real scenario
-                Write-Host "Simulating Restart-Computer -Force" -ForegroundColor DarkCyan
+                Write-Host "Executing Start-OSDCloud for Offline Deployment..." -ForegroundColor Green
+                Start-OSDCloud -ImageFileUrl $ImageFileItem.FullName -ImageIndex 1 -Zti $true -ErrorAction Stop
+                Write-SectionHeader -Message "OSDCloud Offline Process Complete."
+                
+                # In a real ZTI (Zero Touch Installation) scenario, you might want to restart immediately.
+                # Keep this commented out if you need the GUI to run first, then a final restart.
+                # Restart-Computer -Force 
             } else {
-                Write-Host "Error: No valid image file found for $ESDName at $imageFilePath." -ForegroundColor Red
+                Write-Host "Error: Image file $ESDName not found or accessible at $imageFilePath." -ForegroundColor Red
+                return $false # Indicate failure
             }
-        } else {
-            Write-Host "Error: Image file $ESDName not found at $imageFilePath." -ForegroundColor Red
+        } elseif ($Type -eq 'Online') {
+            Write-Host "Executing Start-OSDCloud for Online Deployment..." -ForegroundColor Green
+            Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage -ErrorAction Stop
+            Write-SectionHeader -Message "OSDCloud Online Process Complete."
         }
-    } elseif ($Type -eq 'Online') {
-        # --- Placeholder for OSDCloud logic START ---
-        Write-Host "Simulating Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage (Online)..." -ForegroundColor DarkCyan
-        Start-Sleep -Seconds 3 # Simulate work
-        # --- Placeholder for OSDCloud logic END ---
-
-        # The actual call for OSDCloud online installation (ensure Start-OSDCloud is defined)
-        # Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
-        Write-SectionHeader -Message "OSDCloud Process Complete, Running Custom Actions From Script Before Reboot"
+    } catch {
+        Write-Error "ERROR during OSDCloud installation: $($_.Exception.Message)"
+        return $false # Indicate failure
     }
+    return $true # Indicate success
 }
+
 
 #============================================================
 cls # Clear the console screen
@@ -689,139 +650,83 @@ Write-Host "7: Exit`n"-ForegroundColor Yellow
 
 Write-Host "`n DISCLAIMER: USE AT YOUR OWN RISK - Going further will erase all data on your disk ! `n"-ForegroundColor Red
 
-$input = Read-Host "Please make a selection"
+$selection = Read-Host "Please make a selection"
 
-# Variables to store GUI output
-$global:guiComputerName = $null
-$global:guiOrgUnit = $null
-$global:guiRegion = $null
-$global:guiTimeZoneID = $null
-$global:guiRole = $null
-$global:guiSelectedSoftware = $null
-$global:guiKeyboardLayouts = $null
-$global:guiHomeLocation = $null
-
-switch ($input)
+switch ($selection)
 {
     '1' {
-        Write-Host "Opening deployment data entry form for English Offline..." -ForegroundColor Green
-        $guiResult = Show-DeploymentGUI `
-            -ComputerName ([ref]$global:guiComputerName) `
-            -OrganizationUnit ([ref]$global:guiOrgUnit) `
-            -Region ([ref]$global:guiRegion) `
-            -TimeZoneID ([ref]$global:guiTimeZoneID) `
-            -Role ([ref]$global:guiRole) `
-            -SelectedSoftwareNames ([ref]$global:guiSelectedSoftware) `
-            -KeyboardLayouts ([ref]$global:guiKeyboardLayouts) `
-            -HomeLocation ([ref]$global:guiHomeLocation)
-
-        if ($guiResult) {
-            Write-Host "Data collected from GUI. Proceeding with OSDCloud installation." -ForegroundColor Green
-            Invoke-OSDCloudInstallation -OSLanguage 'en-US' -Type 'Offline' -ESDName 'windows11-24h2-en.esd'
+        Write-Host "Initiating OS deployment (English, Offline)..." -ForegroundColor Green
+        if (Invoke-OSDCloudInstallation -OSLanguage 'en-US' -Type 'Offline' -ESDName 'windows11-24h2-en.esd') {
+            Write-Host "OSDCloud process completed successfully. Opening data entry GUI..." -ForegroundColor Green
+            Show-DeploymentGUI # Call GUI after OSDCloud completes
         } else {
-            Write-Host "GUI data collection cancelled or failed. Aborting OSDCloud installation." -ForegroundColor Red
+            Write-Host "OSDCloud installation failed or was aborted. Skipping GUI and exiting." -ForegroundColor Red
+            Start-Sleep -Seconds 5
+            exit 1 # Exit with error code
         }
     }
     '2' {
-        Write-Host "Opening deployment data entry form for German Offline..." -ForegroundColor Green
-        $guiResult = Show-DeploymentGUI `
-            -ComputerName ([ref]$global:guiComputerName) `
-            -OrganizationUnit ([ref]$global:guiOrgUnit) `
-            -Region ([ref]$global:guiRegion) `
-            -TimeZoneID ([ref]$global:guiTimeZoneID) `
-            -Role ([ref]$global:guiRole) `
-            -SelectedSoftwareNames ([ref]$global:guiSelectedSoftware) `
-            -KeyboardLayouts ([ref]$global:guiKeyboardLayouts) `
-            -HomeLocation ([ref]$global:guiHomeLocation)
-
-        if ($guiResult) {
-            Write-Host "Data collected from GUI. Proceeding with OSDCloud installation." -ForegroundColor Green
-            Invoke-OSDCloudInstallation -OSLanguage 'de-DE' -Type 'Offline' -ESDName 'windows11-24h2-de.esd'
+        Write-Host "Initiating OS deployment (German, Offline)..." -ForegroundColor Green
+        if (Invoke-OSDCloudInstallation -OSLanguage 'de-DE' -Type 'Offline' -ESDName 'windows11-24h2-de.esd') {
+            Write-Host "OSDCloud process completed successfully. Opening data entry GUI..." -ForegroundColor Green
+            Show-DeploymentGUI
         } else {
-            Write-Host "GUI data collection cancelled or failed. Aborting OSDCloud installation." -ForegroundColor Red
+            Write-Host "OSDCloud installation failed or was aborted. Skipping GUI and exiting." -ForegroundColor Red
+            Start-Sleep -Seconds 5
+            exit 1
         }
     }
     '3' {
-        Write-Host "Opening deployment data entry form for Hungarian Offline..." -ForegroundColor Green
-        $guiResult = Show-DeploymentGUI `
-            -ComputerName ([ref]$global:guiComputerName) `
-            -OrganizationUnit ([ref]$global:guiOrgUnit) `
-            -Region ([ref]$global:guiRegion) `
-            -TimeZoneID ([ref]$global:guiTimeZoneID) `
-            -Role ([ref]$global:guiRole) `
-            -SelectedSoftwareNames ([ref]$global:guiSelectedSoftware) `
-            -KeyboardLayouts ([ref]$global:guiKeyboardLayouts) `
-            -HomeLocation ([ref]$global:guiHomeLocation)
-
-        if ($guiResult) {
-            Write-Host "Data collected from GUI. Proceeding with OSDCloud installation." -ForegroundColor Green
-            Invoke-OSDCloudInstallation -OSLanguage 'hu-HU' -Type 'Offline' -ESDName 'windows11-24h2-hu.esd'
+        Write-Host "Initiating OS deployment (Hungarian, Offline)..." -ForegroundColor Green
+        if (Invoke-OSDCloudInstallation -OSLanguage 'hu-HU' -Type 'Offline' -ESDName 'windows11-24h2-hu.esd') {
+            Write-Host "OSDCloud process completed successfully. Opening data entry GUI..." -ForegroundColor Green
+            Show-DeploymentGUI
         } else {
-            Write-Host "GUI data collection cancelled or failed. Aborting OSDCloud installation." -ForegroundColor Red
+            Write-Host "OSDCloud installation failed or was aborted. Skipping GUI and exiting." -ForegroundColor Red
+            Start-Sleep -Seconds 5
+            exit 1
         }
     }
     '4' {
-        Write-Host "Opening deployment data entry form for English Online..." -ForegroundColor Green
-        $guiResult = Show-DeploymentGUI `
-            -ComputerName ([ref]$global:guiComputerName) `
-            -OrganizationUnit ([ref]$global:guiOrgUnit) `
-            -Region ([ref]$global:guiRegion) `
-            -TimeZoneID ([ref]$global:guiTimeZoneID) `
-            -Role ([ref]$global:guiRole) `
-            -SelectedSoftwareNames ([ref]$global:guiSelectedSoftware) `
-            -KeyboardLayouts ([ref]$global:guiKeyboardLayouts) `
-            -HomeLocation ([ref]$global:guiHomeLocation)
-
-        if ($guiResult) {
-            Write-Host "Data collected from GUI. Proceeding with OSDCloud installation." -ForegroundColor Green
-            Invoke-OSDCloudInstallation -OSLanguage 'en-US' -Type 'Online'
+        Write-Host "Initiating OS deployment (English, Online)..." -ForegroundColor Green
+        if (Invoke-OSDCloudInstallation -OSLanguage 'en-US' -Type 'Online') {
+            Write-Host "OSDCloud process completed successfully. Opening data entry GUI..." -ForegroundColor Green
+            Show-DeploymentGUI
         } else {
-            Write-Host "GUI data collection cancelled or failed. Aborting OSDCloud installation." -ForegroundColor Red
+            Write-Host "OSDCloud installation failed or was aborted. Skipping GUI and exiting." -ForegroundColor Red
+            Start-Sleep -Seconds 5
+            exit 1
         }
     }
     '5' {
-        Write-Host "Opening deployment data entry form for German Online..." -ForegroundColor Green
-        $guiResult = Show-DeploymentGUI `
-            -ComputerName ([ref]$global:guiComputerName) `
-            -OrganizationUnit ([ref]$global:guiOrgUnit) `
-            -Region ([ref]$global:guiRegion) `
-            -TimeZoneID ([ref]$global:guiTimeZoneID) `
-            -Role ([ref]$global:guiRole) `
-            -SelectedSoftwareNames ([ref]$global:guiSelectedSoftware) `
-            -KeyboardLayouts ([ref]$global:guiKeyboardLayouts) `
-            -HomeLocation ([ref]$global:guiHomeLocation)
-
-        if ($guiResult) {
-            Write-Host "Data collected from GUI. Proceeding with OSDCloud installation." -ForegroundColor Green
-            Invoke-OSDCloudInstallation -OSLanguage 'de-DE' -Type 'Online'
+        Write-Host "Initiating OS deployment (German, Online)..." -ForegroundColor Green
+        if (Invoke-OSDCloudInstallation -OSLanguage 'de-DE' -Type 'Online') {
+            Write-Host "OSDCloud process completed successfully. Opening data entry GUI..." -ForegroundColor Green
+            Show-DeploymentGUI
         } else {
-            Write-Host "GUI data collection cancelled or failed. Aborting OSDCloud installation." -ForegroundColor Red
+            Write-Host "OSDCloud installation failed or was aborted. Skipping GUI and exiting." -ForegroundColor Red
+            Start-Sleep -Seconds 5
+            exit 1
         }
     }
     '6' {
-        Write-Host "Opening deployment data entry form for Hungarian Online..." -ForegroundColor Green
-        $guiResult = Show-DeploymentGUI `
-            -ComputerName ([ref]$global:guiComputerName) `
-            -OrganizationUnit ([ref]$global:guiOrgUnit) `
-            -Region ([ref]$global:guiRegion) `
-            -TimeZoneID ([ref]$global:guiTimeZoneID) `
-            -Role ([ref]$global:guiRole) `
-            -SelectedSoftwareNames ([ref]$global:guiSelectedSoftware) `
-            -KeyboardLayouts ([ref]$global:guiKeyboardLayouts) `
-            -HomeLocation ([ref]$global:guiHomeLocation)
-
-        if ($guiResult) {
-            Write-Host "Data collected from GUI. Proceeding with OSDCloud installation." -ForegroundColor Green
-            Invoke-OSDCloudInstallation -OSLanguage 'hu-HU' -Type 'Online'
+        Write-Host "Initiating OS deployment (Hungarian, Online)..." -ForegroundColor Green
+        if (Invoke-OSDCloudInstallation -OSLanguage 'hu-HU' -Type 'Online') {
+            Write-Host "OSDCloud process completed successfully. Opening data entry GUI..." -ForegroundColor Green
+            Show-DeploymentGUI
         } else {
-            Write-Host "GUI data collection cancelled or failed. Aborting OSDCloud installation." -ForegroundColor Red
+            Write-Host "OSDCloud installation failed or was aborted. Skipping GUI and exiting." -ForegroundColor Red
+            Start-Sleep -Seconds 5
+            exit 1
         }
     }
     '7' {
         Write-Host "Exiting script. Goodbye!" -ForegroundColor Green
-        exit
+        exit 0
     }
     default {
         Write-Host "Invalid selection. Please enter a number between 1 and 7." -ForegroundColor Red
+        Start-Sleep -Seconds 2
+        exit 1
     }
 }
