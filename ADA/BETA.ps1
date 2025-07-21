@@ -1,27 +1,5 @@
-Add-Type -AssemblyName System.Windows.Forms
-Add-Type -AssemblyName System.Drawing
-
-# --- Logging Function for GUI ---
-function Log-Message {
-    param(
-        [string]$Message,
-        [string]$Level = "INFO" # INFO, WARNING, ERROR, CRITICAL
-    )
-    $logFile = "C:\Temp\gui-log.txt" # Separate log file for GUI events
-    $timestamp = (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
-    $logEntry = "$timestamp [$Level] $Message"
-
-    try {
-        Add-Content -Path $logFile -Value $logEntry -ErrorAction SilentlyContinue # Do not interrupt GUI on error
-    } catch {
-        # If logging to file fails, at least write to console.
-        Write-Error "ERROR: Failed to write to log file (GUI): $($_.Exception.Message) - Message: $logEntry"
-    }
-}
-# --- End Logging Function ---
-
-
-# --- Console Header Functions ---
+# Placeholder functions (YOU NEED TO DEFINE THESE PROPERLY)
+# Include these function definitions if they are not already defined elsewhere
 function Write-DarkGrayLine {
     Write-Host "==================================================" -ForegroundColor DarkGray
 }
@@ -41,14 +19,34 @@ function Write-SectionHeader {
     Write-DarkGrayDate
     Write-Host -ForegroundColor Cyan $Message
 }
-# --- End Console Header Functions ---
+
+# --- Loggoló függvény (a GUI szkripthez) ---
+function Log-Message {
+    param(
+        [string]$Message,
+        [string]$Level = "INFO" # INFO, WARNING, ERROR, CRITICAL
+    )
+    $logFile = "C:\Temp\gui-log.txt" # Külön logfájl a GUI eseményeknek
+    $timestamp = (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
+    $logEntry = "$timestamp [$Level] $Message"
+
+    try {
+        Add-Content -Path $logFile -Value $logEntry -ErrorAction SilentlyContinue # Ne szakítsa meg a GUI-t hiba esetén
+    } catch {
+        # Ha a logfájlba írás sikertelen, akkor legalább a konzolra írjuk ki.
+        Write-Error "HIBA: Nem sikerült a logfájlba írni (GUI): $($_.Exception.Message) - Üzenet: $logEntry"
+    }
+}
+# --- Loggoló függvény vége ---
 
 
-# --- GUI Function Definition ---
-function Show-DeploymentGUI {
+function Show-DataEntryGUI {
+    Add-Type -AssemblyName System.Windows.Forms
+    Add-Type -AssemblyName System.Drawing
 
+    # Main window creation
     $form = New-Object System.Windows.Forms.Form
-    $form.Text = "ADA Windows Deployment - Data Entry"
+    $form.Text = "ADA Windows Deployment - Data Entry Only" # Changed title to reflect functionality
     $form.Size = New-Object System.Drawing.Size(1000, 1000) # Window size (width, height)
     $form.StartPosition = [System.Windows.Forms.FormStartPosition]::CenterScreen # Center the window on screen
     $form.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::FixedSingle # Fixed size, not resizable
@@ -71,33 +69,37 @@ function Show-DeploymentGUI {
         $stringFormat = New-Object System.Drawing.StringFormat
         $stringFormat.Alignment = [System.Drawing.StringAlignment]::Center
         $stringFormat.LineAlignment = [System.Drawing.StringAlignment]::Center
+        # Corrected line: Use -ArgumentList for New-Object with constructor parameters
         $graphics.DrawString("ADA Logo Missing", $font, $brush, (New-Object System.Drawing.RectangleF -ArgumentList 0, 0, 400, 400), $stringFormat)
         $pictureBox.Image = $bitmap
         $graphics.Dispose()
     }
-    $pictureBox.SizeMode = [System.Windows.Forms.PictureBoxSizeMode]::StretchImage # Adjust image to size
-    $pictureBox.Size = New-Object System.Drawing.Size(400, 400) # Logo size 400x400
+    $pictureBox.SizeMode = [System.Windows.Forms.PictureBoxSizeMode]::StretchImage # Kép méretre igazítása
+    $pictureBox.Size = New-Object System.Drawing.Size(400, 400) # Logó mérete 400x400-ra
 
-    # Set logo position: centered at the top
+    # Logó pozíciójának beállítása: középen felül
     $logoX = ([int]($form.ClientSize.Width - $pictureBox.Width) / 2)
-    $logoY = 10 # Small distance from top edge
+    $logoY = 10 # Kis távolság a felső széltől
     $pictureBox.Location = New-Object System.Drawing.Point($logoX, $logoY)
     $form.Controls.Add($pictureBox)
 
     # --- OS Deployment Section ---
+    # Starting Y position for OS Deployment section (below logo)
     $currentY_OS = $pictureBox.Bottom + 20 # 20px below the logo
 
     # OS Deployment Title
     $labelOSDeploymentTitle = New-Object System.Windows.Forms.Label
-    $labelOSDeploymentTitle.Text = "OS Deployment Data"
+    $labelOSDeploymentTitle.Text = "OS Deployment Data" # Renamed title
     $labelOSDeploymentTitle.Font = New-Object System.Drawing.Font("Segoe UI", 11, [System.Drawing.FontStyle]::Bold)
     $labelOSDeploymentTitle.AutoSize = $True
     $labelOSDeploymentTitle.BackColor = [System.Drawing.Color]::Transparent
-    $form.Controls.Add($labelOSDeploymentTitle)
+    $form.Controls.Add($labelOSDeploymentTitle) # Add first to determine size
+    # Center the title within the left column (approx. 50 to 450)
     $leftColumnStartX = 50
     $leftColumnWidth = 400
     $labelOSDeploymentTitle.Location = New-Object System.Drawing.Point(($leftColumnStartX + ($leftColumnWidth - $labelOSDeploymentTitle.Width) / 2), $currentY_OS)
 
+    # Adjust currentY for the first input field relative to the new title
     $currentY_OS = $labelOSDeploymentTitle.Bottom + 20 # 20px below the OS Deployment Title
 
     # Computer Name Label
@@ -108,14 +110,14 @@ function Show-DeploymentGUI {
     $labelComputerName.BackColor = [System.Drawing.Color]::Transparent
     $form.Controls.Add($labelComputerName)
 
-    # Computer Name input field
+    # Számítógép név beviteli mező
     $textBoxComputerName = New-Object System.Windows.Forms.TextBox
-    $textBoxComputerName.Location = New-Object System.Drawing.Point(($leftColumnStartX + 120), ($currentY_OS - 3))
+    $textBoxComputerName.Location = New-Object System.Drawing.Point(($leftColumnStartX + 120), ($currentY_OS - 3)) # Adjusted X for textbox
     $textBoxComputerName.Size = New-Object System.Drawing.Size(200, 20)
     $form.Controls.Add($textBoxComputerName)
-    $currentY_OS += 40
+    $currentY_OS += 40 # Move down for next element
 
-    # Organization Unit Label
+    # Szervezeti egység címke
     $labelOrgUnit = New-Object System.Windows.Forms.Label
     $labelOrgUnit.Text = "Organization Unit:"
     $labelOrgUnit.Location = New-Object System.Drawing.Point($leftColumnStartX, ($currentY_OS - 3))
@@ -123,11 +125,11 @@ function Show-DeploymentGUI {
     $labelOrgUnit.BackColor = [System.Drawing.Color]::Transparent
     $form.Controls.Add($labelOrgUnit)
 
-    # Organization Unit dropdown menu
+    # Szervezeti egység legördülő menü
     $comboBoxOrgUnit = New-Object System.Windows.Forms.ComboBox
     $comboBoxOrgUnit.Location = New-Object System.Drawing.Point(($leftColumnStartX + 120), ($currentY_OS - 3))
     $comboBoxOrgUnit.Size = New-Object System.Drawing.Size(200, 20)
-    $comboBoxOrgUnit.DropDownWidth = 600
+    $comboBoxOrgUnit.DropDownWidth = 600 # A legördülő lista szélessége maradjon nagyobb
     $comboBoxOrgUnit.Items.AddRange(@(
         "OU=Desktop,OU=AA-Standard,OU=Anger,DC=ada-moebel,DC=com",
         "OU=Notebook,OU=AA-Standard,OU=Anger,DC=ada-moebel,DC=com",
@@ -139,7 +141,7 @@ function Show-DeploymentGUI {
     $form.Controls.Add($comboBoxOrgUnit)
     $currentY_OS += 40
 
-    # Region Label
+    # Régió címke
     $labelRegion = New-Object System.Windows.Forms.Label
     $labelRegion.Text = "Region:"
     $labelRegion.Location = New-Object System.Drawing.Point($leftColumnStartX, ($currentY_OS - 3))
@@ -147,7 +149,7 @@ function Show-DeploymentGUI {
     $labelRegion.BackColor = [System.Drawing.Color]::Transparent
     $form.Controls.Add($labelRegion)
 
-    # Region dropdown menu
+    # Régió legördülő menü
     $comboBoxRegion = New-Object System.Windows.Forms.ComboBox
     $comboBoxRegion.Location = New-Object System.Drawing.Point(($leftColumnStartX + 120), ($currentY_OS - 3))
     $comboBoxRegion.Size = New-Object System.Drawing.Size(200, 20)
@@ -156,7 +158,7 @@ function Show-DeploymentGUI {
     $form.Controls.Add($comboBoxRegion)
     $currentY_OS += 40
 
-    # Time Zone Label
+    # Időzóna címke
     $labelTimeZone = New-Object System.Windows.Forms.Label
     $labelTimeZone.Text = "Time Zone:"
     $labelTimeZone.Location = New-Object System.Drawing.Point($leftColumnStartX, ($currentY_OS - 3))
@@ -164,7 +166,7 @@ function Show-DeploymentGUI {
     $labelTimeZone.BackColor = [System.Drawing.Color]::Transparent
     $form.Controls.Add($labelTimeZone)
 
-    # Time Zone dropdown menu
+    # Időzóna legördülő menü
     $comboBoxTimeZone = New-Object System.Windows.Forms.ComboBox
     $comboBoxTimeZone.Location = New-Object System.Drawing.Point(($leftColumnStartX + 120), ($currentY_OS - 3))
     $comboBoxTimeZone.Size = New-Object System.Drawing.Size(200, 20)
@@ -173,7 +175,7 @@ function Show-DeploymentGUI {
     $form.Controls.Add($comboBoxTimeZone)
     $currentY_OS += 40
 
-    # Role Label
+    # Role címke
     $labelRole = New-Object System.Windows.Forms.Label
     $labelRole.Text = "Role:"
     $labelRole.Location = New-Object System.Drawing.Point($leftColumnStartX, ($currentY_OS - 3))
@@ -181,7 +183,7 @@ function Show-DeploymentGUI {
     $labelRole.BackColor = [System.Drawing.Color]::Transparent
     $form.Controls.Add($labelRole)
 
-    # Role dropdown menu
+    # Role legördülő menü
     $comboBoxRole = New-Object System.Windows.Forms.ComboBox
     $comboBoxRole.Location = New-Object System.Drawing.Point(($leftColumnStartX + 120), ($currentY_OS - 3))
     $comboBoxRole.Size = New-Object System.Drawing.Size(200, 20)
@@ -198,12 +200,13 @@ function Show-DeploymentGUI {
 
     # Software Deployment Title
     $labelSoftwareDeploymentTitle = New-Object System.Windows.Forms.Label
-    $labelSoftwareDeploymentTitle.Text = "Software Selection"
+    $labelSoftwareDeploymentTitle.Text = "Software Selection" # Renamed title
     $labelSoftwareDeploymentTitle.Font = New-Object System.Drawing.Font("Segoe UI", 11, [System.Drawing.FontStyle]::Bold)
     $labelSoftwareDeploymentTitle.AutoSize = $True
     $labelSoftwareDeploymentTitle.BackColor = [System.Drawing.Color]::Transparent
-    $form.Controls.Add($labelSoftwareDeploymentTitle)
-    $rightColumnWidth = 400
+    $form.Controls.Add($labelSoftwareDeploymentTitle) # Add first to determine size
+    # Center the title within the right column (approx. 500 to 900)
+    $rightColumnWidth = 400 # Assumed width of the right content column
     $labelSoftwareDeploymentTitle.Location = New-Object System.Drawing.Point(($softwareDeploymentStartX + ($rightColumnWidth - $labelSoftwareDeploymentTitle.Width) / 2), $currentY_Software)
 
 
@@ -218,7 +221,7 @@ function Show-DeploymentGUI {
     $checkboxX = $softwareDeploymentStartX + 10 # Starting X for checkboxes
 
     # Create Checkboxes dynamically and store them in a Hashtable for easy lookup
-    $checkboxes = @{}
+    $checkboxes = @{} # Changed to Hashtable
     foreach ($program in $selectablePrograms) {
         $checkBox = New-Object System.Windows.Forms.CheckBox
         $checkBox.Text = $program
@@ -232,12 +235,13 @@ function Show-DeploymentGUI {
 
 
     # --- Buttons ---
+    # Buttons should be positioned relative to the bottom of the form, centered
     $buttonHeight = 25
     $buttonSpacing = 10
-    $totalButtonWidth = 75 + $buttonSpacing + 75
+    $totalButtonWidth = 75 + $buttonSpacing + 75 # OK button width + spacing + Cancel button width
 
-    $buttonY = $form.ClientSize.Height - $buttonHeight - 30
-    $buttonOKX = ([int]($form.ClientSize.Width - $totalButtonWidth) / 2)
+    $buttonY = $form.ClientSize.Height - $buttonHeight - 30 # 30px from bottom of the form
+    $buttonOKX = ([int]($form.ClientSize.Width - $totalButtonWidth) / 2) # Center of the form
     $buttonCancelX = $buttonOKX + 75 + $buttonSpacing
 
 
@@ -260,6 +264,7 @@ function Show-DeploymentGUI {
         $selectedOU = $comboBoxOrgUnit.SelectedItem
 
         switch ($selectedOU) {
+            # Germany / Wien
             "OU=Desktop,OU=AA-Standard,OU=Anger,DC=ada-moebel,DC=com" {
                 $comboBoxRegion.SelectedItem = "Germany"
                 $comboBoxTimeZone.SelectedItem = "Wien"
@@ -268,10 +273,12 @@ function Show-DeploymentGUI {
                 $comboBoxRegion.SelectedItem = "Germany"
                 $comboBoxTimeZone.SelectedItem = "Wien"
             }
+            # Romania / Bucharest
             "OU=Computers,OU=RS,DC=ada-moebel,DC=com" {
                 $comboBoxRegion.SelectedItem = "Romania"
                 $comboBoxTimeZone.SelectedItem = "Bucharest"
             }
+            # Hungary / Budapest
             "OU=Desktop,OU=HK-Standard,OU=Koermend,DC=ada-moebel,DC=com" {
                 $comboBoxRegion.SelectedItem = "Hungary"
                 $comboBoxTimeZone.SelectedItem = "Budapest"
@@ -285,6 +292,7 @@ function Show-DeploymentGUI {
                 $comboBoxTimeZone.SelectedItem = "Budapest"
             }
             default {
+                # If nothing is selected or does not match any rule
             }
         }
     })
@@ -295,28 +303,34 @@ function Show-DeploymentGUI {
 
         Log-Message "Role ComboBox SelectedIndexChanged event triggered."
 
+        # 1. Töröljük az összes meglévő pipát
         foreach ($checkbox in $checkboxes.Values) {
             $checkbox.Checked = $false
         }
         Log-Message "All checkboxes cleared."
 
+        # 2. Ellenőrizzük, hogy van-e kiválasztott elem
         $selectedRoleItem = $comboBoxRole.SelectedItem
         if ($selectedRoleItem -ne $null) {
             $selectedRole = $selectedRoleItem.ToString()
             Log-Message "Role selected in GUI: $selectedRole"
 
+            # 3. Állítsuk be az új pipákat a kiválasztott szerepkör alapján
             switch ($selectedRole) {
                 "Office" {
+                    # Kért: 7zip, Google Chrome, Microsoft Office 365, Microsoft Teams
                     if ($checkboxes.ContainsKey('7zip')) { $checkboxes['7zip'].Checked = $true; Log-Message "Checked: 7zip" }
                     if ($checkboxes.ContainsKey('Google Chrome')) { $checkboxes['Google Chrome'].Checked = $true; Log-Message "Checked: Google Chrome" }
                     if ($checkboxes.ContainsKey('Microsoft Office 365')) { $checkboxes['Microsoft Office 365'].Checked = $true; Log-Message "Checked: Microsoft Office 365" }
                     if ($checkboxes.ContainsKey('Microsoft Teams')) { $checkboxes['Microsoft Teams'].Checked = $true; Log-Message "Checked: Microsoft Teams" }
                 }
                 "Production" {
+                    # Kért: 7zip, Google Chrome
                     if ($checkboxes.ContainsKey('7zip')) { $checkboxes['7zip'].Checked = $true; Log-Message "Checked: 7zip" }
                     if ($checkboxes.ContainsKey('Google Chrome')) { $checkboxes['Google Chrome'].Checked = $true; Log-Message "Checked: Google Chrome" }
                 }
                 "Test" {
+                    # Nincs alapértelmezett kiválasztás
                     Log-Message "Role 'Test' selected, all optional programs remain deselected."
                 }
                 default {
@@ -324,28 +338,31 @@ function Show-DeploymentGUI {
                 }
             }
         } else {
+            # Ha nincs kiválasztott szerepkör (pl. a lista elején van)
             Log-Message "No role selected in ComboBox."
         }
     }
-    $comboBoxRole.Add_SelectedIndexChanged($roleSelectionChangeHandler)
+    $comboBoxRole.Add_SelectedIndexChanged($roleSelectionChangeHandler) # Assign the event handler
 
+    # --- Trigger initial role-based checkbox selection after the form is loaded ---
     $form.Add_Load({
         $roleSelectionChangeHandler.Invoke($comboBoxRole, [System.EventArgs]::Empty)
     })
+
 
     # Button event handlers
     $buttonOK.Add_Click({
         $computer_name = $textBoxComputerName.Text.Trim()
         $organization_unit = $comboBoxOrgUnit.SelectedItem
-        $region_display_name = $comboBoxRegion.SelectedItem
-        $time_zone_display_name = $comboBoxTimeZone.SelectedItem
-        $role_selected = $comboBoxRole.SelectedItem
+        $region = $comboBoxRegion.SelectedItem
+        $time_zone_display_name = $comboBoxTimeZone.SelectedItem # Read this value from combobox
+        $role = $comboBoxRole.SelectedItem
 
         # Get selected programs
-        $selectedProgramsLocal = @()
-        foreach ($cb in $checkboxes.Values) {
+        $selectedPrograms = @()
+        foreach ($cb in $checkboxes.Values) { # Iterate over values of the hashtable
             if ($cb.Checked) {
-                $selectedProgramsLocal += $cb.Text
+                $selectedPrograms += $cb.Text
             }
         }
 
@@ -368,26 +385,25 @@ function Show-DeploymentGUI {
         }
 
         # Validation: Role selection is mandatory
-        if ([string]::IsNullOrEmpty($role_selected)) {
+        if ([string]::IsNullOrEmpty($role)) {
             [System.Windows.Forms.MessageBox]::Show("Kérem válasszon Szerepkört!", "Hiba", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Error)
             return
         }
 
         # Confirmation MessageBox
         $confirmationMessage = "Kérjük ellenőrizze az alábbi adatokat:`n`n" +
-                               "Számítógép neve: $($computer_name)`n" +
-                               "Szervezeti egység: $($organization_unit)`n" +
-                               "Régió: $($region_display_name)`n" +
-                               "Időzóna (GUI): $($time_zone_display_name)`n" +
-                               "Szerepkör: $($role_selected)`n" +
-                               "Telepítendő szoftverek: $($($selectedProgramsLocal -join ', ') -replace '^$', 'Nincs kiválasztva')`n`n" +
-                               "Szeretné folytatni?"
+                                "Számítógép neve: $($computer_name)`n" +
+                                "Szervezeti egység: $($organization_unit)`n" +
+                                "Régió: $($region)`n" +
+                                "Időzóna (GUI): $($time_zone_display_name)`n" +
+                                "Szerepkör: $($role)`n" +
+                                "Telepítendő szoftverek: $($($selectedPrograms -join ', ') -replace '^$', 'Nincs kiválasztva')`n`n" + # Display selected programs
+                                "Szeretné folytatni?"
 
         $confirmationResult = [System.Windows.Forms.MessageBox]::Show($confirmationMessage, "Adatok ellenőrzése", [System.Windows.Forms.MessageBoxButtons]::OKCancel, [System.Windows.Forms.MessageBoxIcon]::Question)
 
+        # If user clicks "Cancel", stop further execution
         if ($confirmationResult -eq [System.Windows.Forms.DialogResult]::Cancel) {
-            $form.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
-            $form.Close()
             return
         }
 
@@ -396,74 +412,138 @@ function Show-DeploymentGUI {
         if (-not (Test-Path $outputFolderPath)) {
             try {
                 New-Item -Path $outputFolderPath -ItemType Directory -Force | Out-Null
-            } catch {
+            }
+            catch {
                 [System.Windows.Forms.MessageBox]::Show("Hiba a 'C:\Temp' mappa létrehozása során:`n$($_.Exception.Message)", "Hiba", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Error)
-                $form.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
-                $form.Close()
                 return
             }
         }
 
-        # --- Save values to file ---
+        # --- Save OU value to file ---
         $ouOutputPath = Join-Path -Path $outputFolderPath -ChildPath "enroll-organization.txt"
-        try { Set-Content -Path $ouOutputPath -Value $organization_unit -Force; Log-Message "Saved OU: $organization_unit to $ouOutputPath" }
-        catch { [System.Windows.Forms.MessageBox]::Show("Hiba az OU fájlba írása során:`n$($_.Exception.Message)", "Hiba", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Error); $form.DialogResult = [System.Windows.Forms.DialogResult]::Cancel; $form.Close(); return }
+        try {
+            Set-Content -Path $ouOutputPath -Value $organization_unit -Force
+            Log-Message "Saved OU: $organization_unit to $ouOutputPath"
+        }
+        catch {
+            [System.Windows.Forms.MessageBox]::Show("Hiba az OU fájlba írása során:`n$($_.Exception.Message)", "Hiba", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Error)
+            return
+        }
 
+        # --- Save Computer Name value to file ---
         $computerNameOutputPath = Join-Path -Path $outputFolderPath -ChildPath "enroll-computer-name.txt"
-        try { Set-Content -Path $computerNameOutputPath -Value $computer_name -Force; Log-Message "Saved Computer Name: $computer_name to $computerNameOutputPath" }
-        catch { [System.Windows.Forms.MessageBox]::Show("Hiba a számítógép név fájlba írása során:`n$($_.Exception.Message)", "Hiba", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Error); $form.DialogResult = [System.Windows.Forms.DialogResult]::Cancel; $form.Close(); return }
+        try {
+            Set-Content -Path $computerNameOutputPath -Value $computer_name -Force
+            Log-Message "Saved Computer Name: $computer_name to $computerNameOutputPath"
+        }
+        catch {
+            [System.Windows.Forms.MessageBox]::Show("Hiba a számítógép név fájlba írása során:`n$($_.Exception.Message)", "Hiba", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Error)
+            return
+        }
 
+        # --- Save Region value to file with specified codes ---
         $regionCode = ""
-        switch ($region_display_name) {
+        switch ($region) {
             "Germany" { $regionCode = "de-DE" }
             "Hungary" { $regionCode = "hu-HU" }
             "Romania" { $regionCode = "en-US" }
+            default {
+                [System.Windows.Forms.MessageBox]::Show("Ismeretlen régió kiválasztva: $($region). Nem sikerült a régió kódját menteni.", "Figyelmeztetés", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Warning)
+            }
         }
+
         if (-not [string]::IsNullOrEmpty($regionCode)) {
             $regionOutputPath = Join-Path -Path $outputFolderPath -ChildPath "enroll-region.txt"
-            try { Set-Content -Path $regionOutputPath -Value $regionCode -Force; Log-Message "Saved Region Code: $regionCode to $regionOutputPath" }
-            catch { [System.Windows.Forms.MessageBox]::Show("Hiba a régió fájlba írása során:`n$($_.Exception.Message)", "Hiba", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Error); $form.DialogResult = [System.Windows.Forms.DialogResult]::Cancel; $form.Close(); return }
+            try {
+                Set-Content -Path $regionOutputPath -Value $regionCode -Force
+                Log-Message "Saved Region Code: $regionCode to $regionOutputPath"
+            }
+            catch {
+                [System.Windows.Forms.MessageBox]::Show("Hiba a régió fájlba írása során:`n$($_.Exception.Message)", "Hiba", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Error)
+                return
+            }
         }
 
-        $keyboardLayoutsArray = @()
-        switch ($region_display_name) {
-            "Germany" { $keyboardLayoutsArray = @("00000407", "00000409", "0000040e") }
-            "Hungary" { $keyboardLayoutsArray = @("0000040e", "00000409", "00000407") }
-            "Romania" { $keyboardLayoutsArray = @("00000409", "00000407", "0000040e") }
+        # --- Save Keyboard Layout to file with specified codes ---
+        $keyboardLayouts = @()
+        switch ($region) {
+            "Germany" { $keyboardLayouts = @("00000407", "00000409", "0000040e") }
+            "Hungary" { $keyboardLayouts = @("0000040e", "00000409", "00000407") }
+            "Romania" { $keyboardLayouts = @("00000409", "00000407", "0000040e") }
+            default {
+                [System.Windows.Forms.MessageBox]::Show("Ismeretlen régió kiválasztva: $($region). Nem sikerült a billentyűzetkiosztást menteni.", "Figyelmeztetés", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Warning)
+            }
         }
-        if ($keyboardLayoutsArray.Count -gt 0) {
+
+        if ($keyboardLayouts.Count -gt 0) {
             $keyboardLayoutOutputPath = Join-Path -Path $outputFolderPath -ChildPath "enroll-keyboard-layout.txt"
-            try { Set-Content -Path $keyboardLayoutOutputPath -Value ($keyboardLayoutsArray -join ',') -Force; Log-Message "Saved Keyboard Layouts: $($keyboardLayoutsArray -join ',') to $keyboardLayoutOutputPath" }
-            catch { [System.Windows.Forms.MessageBox]::Show("Hiba a billentyűzetkiosztás fájlba írása során:`n$($_.Exception.Message)", "Hiba", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Error); $form.DialogResult = [System.Windows.Forms.DialogResult]::Cancel; $form.Close(); return }
+            try {
+                Set-Content -Path $keyboardLayoutOutputPath -Value ($keyboardLayouts -join ',') -Force
+                Log-Message "Saved Keyboard Layouts: $($keyboardLayouts -join ',') to $keyboardLayoutOutputPath"
+            }
+            catch {
+                [System.Windows.Forms.MessageBox]::Show("Hiba a billentyűzetkiosztás fájlba írása során:`n$($_.Exception.Message)", "Hiba", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Error)
+                return
+            }
         }
 
-        $homeLocationCode = ""
-        switch ($region_display_name) {
-            "Germany" { $homeLocationCode = "14" }
-            "Hungary" { $homeLocationCode = "109" }
-            "Romania" { $homeLocationCode = "200" }
+        # --- Save Home Location to file ---
+        $homeLocation = ""
+        switch ($region) {
+            "Germany" { $homeLocation = "14" }
+            "Hungary" { $homeLocation = "109" }
+            "Romania" { $homeLocation = "200" }
+            default {
+                [System.Windows.Forms.MessageBox]::Show("Ismeretlen régió kiválasztva: $($region). Nem sikerült a home location kódot menteni.", "Figyelmeztetés", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Warning)
+            }
         }
-        if (-not [string]::IsNullOrEmpty($homeLocationCode)) {
+
+        if (-not [string]::IsNullOrEmpty($homeLocation)) {
             $homeLocationOutputPath = Join-Path -Path $outputFolderPath -ChildPath "enroll-home-location.txt"
-            try { Set-Content -Path $homeLocationOutputPath -Value $homeLocationCode -Force; Log-Message "Saved Home Location: $homeLocationCode to $homeLocationOutputPath" }
-            catch { [System.Windows.Forms.MessageBox]::Show("Hiba a home location fájlba írása során:`n$($_.Exception.Message)", "Hiba", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Error); $form.DialogResult = [System.Windows.Forms.DialogResult]::Cancel; $form.Close(); return }
+            try {
+                Set-Content -Path $homeLocationOutputPath -Value $homeLocation -Force
+                Log-Message "Saved Home Location: $homeLocation to $homeLocationOutputPath"
+            }
+            catch {
+                [System.Windows.Forms.MessageBox]::Show("Hiba a home location fájlba írása során:`n$($_.Exception.Message)", "Hiba", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Error)
+                return
+            }
         }
 
+        # --- Save Time Zone ID to file ---
         $timeZoneID = ""
         switch ($time_zone_display_name) {
             "Wien" { $timeZoneID = "W. Europe Standard Time" }
             "Budapest" { $timeZoneID = "Central Europe Standard Time" }
             "Bucharest" { $timeZoneID = "GTB Standard Time" }
-        }
-        if (-not [string]::IsNullOrEmpty($timeZoneID)) {
-            $timeZoneOutputPath = Join-Path -Path $outputFolderPath -ChildPath "enroll-time-zone.txt"
-            try { Set-Content -Path $timeZoneOutputPath -Value $timeZoneID -Force; Log-Message "Saved Time Zone ID: $timeZoneID to $timeZoneOutputPath" }
-            catch { [System.Windows.Forms.MessageBox]::Show("Hiba az időzóna fájlba írása során:`n$($_.Exception.Message)", "Hiba", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Error); $form.DialogResult = [System.Windows.Forms.DialogResult]::Cancel; $form.Close(); return }
+            default {
+                [System.Windows.Forms.MessageBox]::Show("Ismeretlen időzóna kiválasztva: $($time_zone_display_name). Nem sikerült az időzóna ID-t menteni.", "Figyelmeztetés", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Warning)
+            }
         }
 
+        if (-not [string]::IsNullOrEmpty($timeZoneID)) {
+            $timeZoneOutputPath = Join-Path -Path $outputFolderPath -ChildPath "enroll-time-zone.txt"
+            try {
+                Set-Content -Path $timeZoneOutputPath -Value $timeZoneID -Force
+                Log-Message "Saved Time Zone ID: $timeZoneID to $timeZoneOutputPath"
+            }
+            catch {
+                [System.Windows.Forms.MessageBox]::Show("Hiba az időzóna fájlba írása során:`n$($_.Exception.Message)", "Hiba", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Error)
+                return
+            }
+        }
+        # --- End Time Zone ID saving ---
+
+        # --- Save Role to enroll-ninja1.txt for NinjaOne script ---
         $ninjaRoleOutputPath = Join-Path -Path $outputFolderPath -ChildPath "enroll-ninja1.txt"
-        try { Set-Content -Path $ninjaRoleOutputPath -Value $role_selected -Force; Log-Message "Saved Role: $role_selected to $ninjaRoleOutputPath" }
-        catch { [System.Windows.Forms.MessageBox]::Show("Hiba a NinjaOne szerepkör fájlba írása során:`n$($_.Exception.Message)", "Hiba", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Error); $form.DialogResult = [System.Windows.Forms.DialogResult]::Cancel; $form.Close(); return }
+        try {
+            Set-Content -Path $ninjaRoleOutputPath -Value $role -Force
+            Log-Message "Saved Role: $role to $ninjaRoleOutputPath"
+        }
+        catch {
+            [System.Windows.Forms.MessageBox]::Show("Hiba a NinjaOne szerepkör fájlba írása során:`n$($_.Exception.Message)", "Hiba", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Error)
+            return
+        }
 
         # --- Create Configuration Files for Software ---
         $softwareListFile = Join-Path $outputFolderPath "software.txt"
@@ -499,40 +579,59 @@ function Show-DeploymentGUI {
             if ($selectedSoftwareNamesForLog.Count -gt 0) { Log-Message "User selected programs: $($selectedSoftwareNamesForLog -join ', ')" }
             else { Log-Message "No optional software selected by user." }
 
+            # Write software.txt
             if (Test-Path $softwareListFile) { Remove-Item $softwareListFile -Force }
             if ($specialSoftware.Count -gt 0) { $specialSoftware | Out-File $softwareListFile -Encoding UTF8 -ErrorAction Stop; Log-Message "Special handling software saved to: $softwareListFile - Programs: $($specialSoftware -join ', ')" }
             else { Log-Message "No software selected for special handling. $softwareListFile is empty or not created." }
 
+            # Write software-winget.txt
             if (Test-Path $wingetListFile) { Remove-Item $wingetListFile -Force }
             if ($wingetPackages.Count -gt 0) { $wingetPackages | Out-File $wingetListFile -Encoding UTF8 -ErrorAction Stop; Log-Message "Winget package IDs saved to: $wingetListFile - Packages: $($wingetPackages -join ', ')" }
             else { Log-Message "No software with valid Winget mapping selected. $wingetListFile is empty or not created." }
 
         } catch {
             Log-Message "ERROR: Failed to create software list files in '$outputFolderPath'. Error: $($_.Exception.Message)"; [System.Windows.Forms.MessageBox]::Show("Failed to create software list files in C:\Temp.", "File Error", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Error)
-            $form.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
-            $form.Close()
-            return
+            return # Stop further execution on file creation error
         }
         # --- End Create Configuration Files for Software ---
 
         [System.Windows.Forms.MessageBox]::Show("Az adatok mentésre kerültek a C:\Temp mappába.", "Befejezve", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Information)
-        $form.DialogResult = [System.Windows.Forms.DialogResult]::OK # Set DialogResult to OK on successful save
-        $form.Close()
+
+        $form.Close() # Close the main form
     })
 
     $buttonCancel.Add_Click({
-        $form.DialogResult = [System.Windows.Forms.DialogResult]::Cancel # Set DialogResult to Cancel
-        $form.Close()
+        $form.Close() # Close the window
     })
 
-    $form.ShowDialog() # Display the GUI and wait for user interaction
+    # Display window
+    $result = $form.ShowDialog()
 
-    return ($form.DialogResult -eq [System.Windows.Forms.DialogResult]::OK)
+    # Global variables for access (available after window closes)
+    if ($result -eq [System.Windows.Forms.DialogResult]::OK) {
+        $global:computer_name = $textBoxComputerName.Text.Trim()
+        $global:organization_unit = $comboBoxOrgUnit.SelectedItem
+        $global:region = $comboBoxRegion.SelectedItem
+        $global:role = $comboBoxRole.SelectedItem
+        # These were previously parameters, now they are just null if not explicitly set elsewhere
+        $global:domain_username = $null
+        $global:domain_name = $null
+    } else {
+        $global:computer_name = $null
+        $global:organization_unit = $null
+        $global:region = $null
+        $global:role = $null
+        $global:domain_username = $null
+        $global:domain_name = $null
+    }
+
+    # As an example, to see the values after the window closes:
+    Write-Host "Computer Name (global): $global:computer_name"
+    Write-Host "Organization Unit (global): $global:organization_unit"
+    Write-Host "Region (global): $global:region"
+    Write-Host "Role (global): $global:role"
 }
-# --- End GUI Function Definition ---
 
-
-# --- OSDCloud Installation Function ---
 function Invoke-OSDCloudInstallation {
     param (
         [Parameter(Mandatory = $true)]
@@ -544,46 +643,19 @@ function Invoke-OSDCloudInstallation {
         [string]$ESDName = $null # Only required for offline
     )
 
-    # --- Robust OSDCloud Module Check ---
-    if (-not (Get-Module -ListAvailable -Name OSDCloud)) {
-        Write-Host ""
-        Write-Host "======================================================================" -ForegroundColor Red
-        Write-Host "CRITICAL ERROR: OSDCloud module is not installed or discoverable." -ForegroundColor Red
-        Write-Host "Please run the following commands in an ADMINISTRATOR PowerShell session FIRST:" -ForegroundColor Red
-        Write-Host "" -ForegroundColor Red
-        Write-Host "    Install-Module -Name PowerShellGet -Force -AllowClobber -Scope CurrentUser" -ForegroundColor Red
-        Write-Host "    Install-Module -Name OSDCloud -Force -Confirm:`$false" -ForegroundColor Red
-        Write-Host "" -ForegroundColor Red
-        Write-Host "Then try running this main script again." -ForegroundColor Red
-        Write-Host "======================================================================" -ForegroundColor Red
-        Start-Sleep -Seconds 10
-        return $false # Indicate failure to the calling script
-    }
-
-    # If the module is found, import it.
-    try {
-        Import-Module OSDCloud -ErrorAction Stop
-        Write-Host "OSDCloud module loaded successfully." -ForegroundColor Green
-    } catch {
-        Write-Error "ERROR: Failed to load OSDCloud module even after detection. Check permissions or module integrity. $($_.Exception.Message)"
-        return $false
-    }
-    # --- End Robust OSDCloud Module Check ---
-
-
     $OSName = 'Windows 11 24H2 x64'
     $OSEdition = 'Enterprise'
     $OSActivation = 'Volume'
 
     # Set OSDCloud Global Variables
     $Global:MyOSDCloud = [ordered]@{
-        Restart               = [bool]$False # OSDCloud usually handles restarts, setting to False for control
+        Restart               = [bool]$False
         RecoveryPartition     = [bool]$true
         OEMActivation         = [bool]$True
         WindowsUpdate         = [bool]$false
         WindowsUpdateDrivers  = [bool]$false
         WindowsDefenderUpdate = [bool]$false
-        SetTimeZone           = [bool]$false # TimeZone will be set by a later script based on GUI data
+        SetTimeZone           = [bool]$false
         ClearDiskConfirm      = [bool]$False
         ShutdownSetupComplete = [bool]$false
         SyncMSUpCatDriverUSB  = [bool]$true
@@ -595,49 +667,57 @@ function Invoke-OSDCloudInstallation {
 
     Write-SectionHeader -Message "Starting OSDCloud for $($OSLanguage) $($Type) Installation"
 
-    try {
-        if ($Type -eq 'Offline') {
-            if (-not $ESDName) {
-                Write-Host "Error: ESDName is required for offline installation." -ForegroundColor Red
-                return $false # Indicate failure for the main script
+    if ($Type -eq 'Offline') {
+        if (-not $ESDName) {
+            Write-Host "Error: ESDName is required for offline installation." -ForegroundColor Red
+            return
+        }
+        $imageFilePath = '\OSDCloud\OS\' # Consider making this configurable
+        # Placeholder for Find-OSDCloudFile (assuming it finds a file object)
+        # You'll need to replace this with your actual Find-OSDCloudFile implementation
+        # For demonstration, let's assume it returns a PSCustomObject with FullName
+        $ImageFileItem = $null
+        try {
+            # This is a placeholder; replace with your actual function call
+            # Example: $ImageFileItem = Find-OSDCloudFile -Name $ESDName -Path $imageFilePath
+            # For testing without actual OSDCloud components:
+            if (Test-Path (Join-Path $imageFilePath $ESDName)) {
+                $ImageFileItem = [PSCustomObject]@{FullName = (Join-Path $imageFilePath $ESDName)}
             }
-            $imageFilePath = '\OSDCloud\OS\' # This should be a network share path accessible in WinPE
+        } catch {
+            Write-Host "Error finding OSDCloud file: $($_.Exception.Message)" -ForegroundColor Red
+            return
+        }
 
-            Write-Host "Searching for OSDCloud image file: $ESDName at $imageFilePath" -ForegroundColor Cyan
-            # Actual OSDCloud function call
-            $ImageFileItem = Find-OSDCloudFile -Name $ESDName -Path $imageFilePath -ErrorAction Stop
 
+        if ($ImageFileItem) {
+            $ImageFileItem = $ImageFileItem | Where-Object {$_.FullName -notlike "X*"} | Select-Object -First 1
             if ($ImageFileItem) {
                 $Global:MyOSDCloud.ImageFileItem = $ImageFileItem
-                $Global:MyOSDCloud.ImageFileName = $ImageFileItem.Name
+                $Global:MyOSDCloud.ImageFileName = Split-Path -Path $ImageFileItem.FullName -Leaf
                 $Global:MyOSDCloud.ImageFileFullName = $ImageFileItem.FullName
-                $Global:MyOSDCloud.OSImageIndex = 1 # Assuming default index 1, adjust if needed
-
-                Write-Host "Executing Start-OSDCloud for Offline Deployment..." -ForegroundColor Green
-                # Actual OSDCloud function call
-                Start-OSDCloud -ImageFileUrl $ImageFileItem.FullName -ImageIndex 1 -Zti $true -ErrorAction Stop
-                Write-SectionHeader -Message "OSDCloud Offline Process Complete."
-                
-                # In a real ZTI (Zero Touch Installation) scenario, you might want to restart immediately.
-                # Keep this commented out if you need the GUI to run first, then a final restart.
-                # Restart-Computer -Force 
+                $Global:MyOSDCloud.OSImageIndex = 1
+                # Placeholder for Start-OSDCloud
+                Write-Host "Start-OSDCloud -ImageFileUrl $($ImageFileItem.FullName) -ImageIndex 1 -Zti" -ForegroundColor Green
+                Start-OSDCloud -ImageFileUrl $ImageFileItem -ImageIndex 1 -Zti
+                Write-SectionHeader -Message "OSDCloud Process Complete for Offline Installation, Running GUI Before Reboot"
+                Show-DataEntryGUI
+                Restart-Computer -Force
             } else {
-                Write-Host "Error: Image file $ESDName not found or accessible at $imageFilePath." -ForegroundColor Red
-                return $false # Indicate failure
+                Write-Host "Error: No valid image file found for $ESDName at $imageFilePath." -ForegroundColor Red
             }
-        } elseif ($Type -eq 'Online') {
-            Write-Host "Executing Start-OSDCloud for Online Deployment..." -ForegroundColor Green
-            # Actual OSDCloud function call
-            Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage -ErrorAction Stop
-            Write-SectionHeader -Message "OSDCloud Online Process Complete."
+        } else {
+            Write-Host "Error: Image file $ESDName not found at $imageFilePath." -ForegroundColor Red
         }
-    } catch {
-        Write-Error "ERROR during OSDCloud installation: $($_.Exception.Message)"
-        return $false # Indicate failure
+    } elseif ($Type -eq 'Online') {
+        # Placeholder for Start-OSDCloud
+        Write-Host "Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage" -ForegroundColor Green
+        Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
+        Write-SectionHeader -Message "OSDCloud Process Complete, Running Custom Actions From Script Before Reboot"
+        Show-DataEntryGUI
+        Restart-Computer -Force
     }
-    return $true # Indicate success
 }
-
 
 #============================================================
 cls # Clear the console screen
@@ -657,83 +737,21 @@ Write-Host "7: Exit`n"-ForegroundColor Yellow
 
 Write-Host "`n DISCLAIMER: USE AT YOUR OWN RISK - Going further will erase all data on your disk ! `n"-ForegroundColor Red
 
-$selection = Read-Host "Please make a selection"
+$input = Read-Host "Please make a selection"
 
-switch ($selection)
+switch ($input)
 {
-    '1' {
-        Write-Host "Initiating OS deployment (English, Offline)..." -ForegroundColor Green
-        if (Invoke-OSDCloudInstallation -OSLanguage 'en-US' -Type 'Offline' -ESDName 'windows11-24h2-en.esd') {
-            Write-Host "OSDCloud process completed successfully. Opening data entry GUI..." -ForegroundColor Green
-            Show-DeploymentGUI # Call GUI after OSDCloud completes
-        } else {
-            Write-Host "OSDCloud installation failed or was aborted. Skipping GUI and exiting." -ForegroundColor Red
-            Start-Sleep -Seconds 5
-            exit 1 # Exit with error code
-        }
-    }
-    '2' {
-        Write-Host "Initiating OS deployment (German, Offline)..." -ForegroundColor Green
-        if (Invoke-OSDCloudInstallation -OSLanguage 'de-DE' -Type 'Offline' -ESDName 'windows11-24h2-de.esd') {
-            Write-Host "OSDCloud process completed successfully. Opening data entry GUI..." -ForegroundColor Green
-            Show-DeploymentGUI
-        } else {
-            Write-Host "OSDCloud installation failed or was aborted. Skipping GUI and exiting." -ForegroundColor Red
-            Start-Sleep -Seconds 5
-            exit 1
-        }
-    }
-    '3' {
-        Write-Host "Initiating OS deployment (Hungarian, Offline)..." -ForegroundColor Green
-        if (Invoke-OSDCloudInstallation -OSLanguage 'hu-HU' -Type 'Offline' -ESDName 'windows11-24h2-hu.esd') {
-            Write-Host "OSDCloud process completed successfully. Opening data entry GUI..." -ForegroundColor Green
-            Show-DeploymentGUI
-        } else {
-            Write-Host "OSDCloud installation failed or was aborted. Skipping GUI and exiting." -ForegroundColor Red
-            Start-Sleep -Seconds 5
-            exit 1
-        }
-    }
-    '4' {
-        Write-Host "Initiating OS deployment (English, Online)..." -ForegroundColor Green
-        if (Invoke-OSDCloudInstallation -OSLanguage 'en-US' -Type 'Online') {
-            Write-Host "OSDCloud process completed successfully. Opening data entry GUI..." -ForegroundColor Green
-            Show-DeploymentGUI
-        } else {
-            Write-Host "OSDCloud installation failed or was aborted. Skipping GUI and exiting." -ForegroundColor Red
-            Start-Sleep -Seconds 5
-            exit 1
-        }
-    }
-    '5' {
-        Write-Host "Initiating OS deployment (German, Online)..." -ForegroundColor Green
-        if (Invoke-OSDCloudInstallation -OSLanguage 'de-DE' -Type 'Online') {
-            Write-Host "OSDCloud process completed successfully. Opening data entry GUI..." -ForegroundColor Green
-            Show-DeploymentGUI
-        } else {
-            Write-Host "OSDCloud installation failed or was aborted. Skipping GUI and exiting." -ForegroundColor Red
-            Start-Sleep -Seconds 5
-            exit 1
-        }
-    }
-    '6' {
-        Write-Host "Initiating OS deployment (Hungarian, Online)..." -ForegroundColor Green
-        if (Invoke-OSDCloudInstallation -OSLanguage 'hu-HU' -Type 'Online') {
-            Write-Host "OSDCloud process completed successfully. Opening data entry GUI..." -ForegroundColor Green
-            Show-DeploymentGUI
-        } else {
-            Write-Host "OSDCloud installation failed or was aborted. Skipping GUI and exiting." -ForegroundColor Red
-            Start-Sleep -Seconds 5
-            exit 1
-        }
-    }
+    '1' { Invoke-OSDCloudInstallation -OSLanguage 'en-US' -Type 'Offline' -ESDName 'windows11-24h2-en.esd' }
+    '2' { Invoke-OSDCloudInstallation -OSLanguage 'de-DE' -Type 'Offline' -ESDName 'windows11-24h2-de.esd' }
+    '3' { Invoke-OSDCloudInstallation -OSLanguage 'hu-HU' -Type 'Offline' -ESDName 'windows11-24h2-hu.esd' }
+    '4' { Invoke-OSDCloudInstallation -OSLanguage 'en-US' -Type 'Online' }
+    '5' { Invoke-OSDCloudInstallation -OSLanguage 'de-DE' -Type 'Online' }
+    '6' { Invoke-OSDCloudInstallation -OSLanguage 'hu-HU' -Type 'Online' }
     '7' {
         Write-Host "Exiting script. Goodbye!" -ForegroundColor Green
-        exit 0
+        exit
     }
     default {
         Write-Host "Invalid selection. Please enter a number between 1 and 7." -ForegroundColor Red
-        Start-Sleep -Seconds 2
-        exit 1
     }
 }
