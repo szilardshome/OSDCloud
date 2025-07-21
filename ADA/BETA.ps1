@@ -673,22 +673,7 @@ function Invoke-OSDCloudInstallation {
             return
         }
         $imageFilePath = '\OSDCloud\OS\' # Consider making this configurable
-        # Placeholder for Find-OSDCloudFile (assuming it finds a file object)
-        # You'll need to replace this with your actual Find-OSDCloudFile implementation
-        # For demonstration, let's assume it returns a PSCustomObject with FullName
-        $ImageFileItem = $null
-        try {
-            # This is a placeholder; replace with your actual function call
-            # Example: $ImageFileItem = Find-OSDCloudFile -Name $ESDName -Path $imageFilePath
-            # For testing without actual OSDCloud components:
-            if (Test-Path (Join-Path $imageFilePath $ESDName)) {
-                $ImageFileItem = [PSCustomObject]@{FullName = (Join-Path $imageFilePath $ESDName)}
-            }
-        } catch {
-            Write-Host "Error finding OSDCloud file: $($_.Exception.Message)" -ForegroundColor Red
-            return
-        }
-
+        $ImageFileItem = Find-OSDCloudFile -Name $ESDName -Path $imageFilePath
 
         if ($ImageFileItem) {
             $ImageFileItem = $ImageFileItem | Where-Object {$_.FullName -notlike "X*"} | Select-Object -First 1
