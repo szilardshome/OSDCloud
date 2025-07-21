@@ -1,12 +1,5 @@
-#Change Display Resolution for Virtual Machine
-if ((Get-MyComputerModel) -match 'Virtual') {
-    Write-Host  -ForegroundColor Cyan "Setting Display Resolution to 1600x"
-    Set-DisRes 1600
-}
-
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
-
 
 # --- Logging Function for GUI ---
 function Log-Message {
@@ -551,17 +544,31 @@ function Invoke-OSDCloudInstallation {
         [string]$ESDName = $null # Only required for offline
     )
 
-    # Ensure OSDCloud module is imported (adjust if your OSDCloud is a script, not a module)
-    # This assumes the OSDCloud module is installed (e.g., via Install-Module OSDCloud)
-    # If OSDCloud functions are in a separate script file, you'd dot-source it here:
-    # . "C:\Path\To\Your\OSDCloudFunctions.ps1"
+    # --- Robust OSDCloud Module Check ---
+    if (-not (Get-Module -ListAvailable -Name OSDCloud)) {
+        Write-Host ""
+        Write-Host "======================================================================" -ForegroundColor Red
+        Write-Host "CRITICAL ERROR: OSDCloud module is not installed or discoverable." -ForegroundColor Red
+        Write-Host "Please run the following commands in an ADMINISTRATOR PowerShell session FIRST:" -ForegroundColor Red
+        Write-Host "" -ForegroundColor Red
+        Write-Host "    Install-Module -Name PowerShellGet -Force -AllowClobber -Scope CurrentUser" -ForegroundColor Red
+        Write-Host "    Install-Module -Name OSDCloud -Force -Confirm:`$false" -ForegroundColor Red
+        Write-Host "" -ForegroundColor Red
+        Write-Host "Then try running this main script again." -ForegroundColor Red
+        Write-Host "======================================================================" -ForegroundColor Red
+        Start-Sleep -Seconds 10
+        return $false # Indicate failure to the calling script
+    }
+
+    # If the module is found, import it.
     try {
         Import-Module OSDCloud -ErrorAction Stop
         Write-Host "OSDCloud module loaded successfully." -ForegroundColor Green
     } catch {
-        Write-Error "ERROR: OSDCloud module could not be loaded. Please ensure it is installed. $($_.Exception.Message)"
+        Write-Error "ERROR: Failed to load OSDCloud module even after detection. Check permissions or module integrity. $($_.Exception.Message)"
         return $false
     }
+    # --- End Robust OSDCloud Module Check ---
 
 
     $OSName = 'Windows 11 24H2 x64'
@@ -569,7 +576,6 @@ function Invoke-OSDCloudInstallation {
     $OSActivation = 'Volume'
 
     # Set OSDCloud Global Variables
-    # These are standard OSDCloud parameters. Adjust as needed for your environment.
     $Global:MyOSDCloud = [ordered]@{
         Restart               = [bool]$False # OSDCloud usually handles restarts, setting to False for control
         RecoveryPartition     = [bool]$true
@@ -593,22 +599,22 @@ function Invoke-OSDCloudInstallation {
         if ($Type -eq 'Offline') {
             if (-not $ESDName) {
                 Write-Host "Error: ESDName is required for offline installation." -ForegroundColor Red
-                return $false # Indicate failure
+                return $false # Indicate failure for the main script
             }
             $imageFilePath = '\OSDCloud\OS\' # This should be a network share path accessible in WinPE
 
             Write-Host "Searching for OSDCloud image file: $ESDName at $imageFilePath" -ForegroundColor Cyan
+            # Actual OSDCloud function call
             $ImageFileItem = Find-OSDCloudFile -Name $ESDName -Path $imageFilePath -ErrorAction Stop
 
             if ($ImageFileItem) {
-                # OSDCloud's Start-OSDCloud expects an ImageFileItem object or path.
-                # Assuming $ImageFileItem is the result of Find-OSDCloudFile
                 $Global:MyOSDCloud.ImageFileItem = $ImageFileItem
                 $Global:MyOSDCloud.ImageFileName = $ImageFileItem.Name
                 $Global:MyOSDCloud.ImageFileFullName = $ImageFileItem.FullName
                 $Global:MyOSDCloud.OSImageIndex = 1 # Assuming default index 1, adjust if needed
 
                 Write-Host "Executing Start-OSDCloud for Offline Deployment..." -ForegroundColor Green
+                # Actual OSDCloud function call
                 Start-OSDCloud -ImageFileUrl $ImageFileItem.FullName -ImageIndex 1 -Zti $true -ErrorAction Stop
                 Write-SectionHeader -Message "OSDCloud Offline Process Complete."
                 
@@ -621,6 +627,7 @@ function Invoke-OSDCloudInstallation {
             }
         } elseif ($Type -eq 'Online') {
             Write-Host "Executing Start-OSDCloud for Online Deployment..." -ForegroundColor Green
+            # Actual OSDCloud function call
             Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage -ErrorAction Stop
             Write-SectionHeader -Message "OSDCloud Online Process Complete."
         }
