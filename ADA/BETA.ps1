@@ -600,9 +600,9 @@ function Show-DataEntryGUI {
         $form.Close() # Close the main form
     })
 
-    $buttonCancel.Add_Click({
-        $form.Close() # Close the window
-    })
+    # $buttonCancel.Add_Click({
+    #     $form.Close() # Close the window
+    # })
 
     # Display window
     $result = $form.ShowDialog()
@@ -624,12 +624,6 @@ function Show-DataEntryGUI {
         $global:domain_username = $null
         $global:domain_name = $null
     }
-
-    # As an example, to see the values after the window closes:
-    Write-Host "Computer Name (global): $global:computer_name"
-    Write-Host "Organization Unit (global): $global:organization_unit"
-    Write-Host "Region (global): $global:region"
-    Write-Host "Role (global): $global:role"
 }
 
 function Invoke-OSDCloudInstallation {
