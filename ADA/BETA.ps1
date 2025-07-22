@@ -595,8 +595,6 @@ function Show-DataEntryGUI {
         }
         # --- End Create Configuration Files for Software ---
 
-        [System.Windows.Forms.MessageBox]::Show("Az adatok mentésre kerültek a C:\Temp mappába.", "Befejezve", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Information)
-
         $form.Close() # Close the main form
     })
 
