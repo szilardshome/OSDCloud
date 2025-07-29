@@ -40,8 +40,8 @@ function Invoke-OSDCloudInstallation {
         Restart               = [bool]$False
         RecoveryPartition     = [bool]$true
         OEMActivation         = [bool]$True
-        WindowsUpdate         = [bool]$false
-        WindowsUpdateDrivers  = [bool]$false
+        WindowsUpdate         = [bool]$true
+        WindowsUpdateDrivers  = [bool]$true
         WindowsDefenderUpdate = [bool]$false
         SetTimeZone           = [bool]$false
         ClearDiskConfirm      = [bool]$False
@@ -93,56 +93,6 @@ Write-Host "=============================================" -ForegroundColor Yell
 Write-Host "========== ADA Mobelfabrik GMBH =============" -ForegroundColor Yellow
 Write-Host "=============================================`n" -ForegroundColor Yellow
 
-## Automatic ADA.ppkg Download
-
-# --- ADA.ppkg Download Logic (runs automatically) ---
-Write-SectionHeader "Startup Preparations: Downloading ADA.ppkg"
-
-$SourceUrl = "https://github.com/szilardshome/OSDCloud/raw/main/ADA/ADA.ppkg"
-$FileName = "ADA.ppkg"
-
-# List of possible root drives to check in order of priority
-$PossibleRootDrives = @("C:", "D:", "E:", "F:", "G:")
-$TargetSubPath = "OSDCloud\Automate\Provisioning"
-
-$DestinationPath = $null # This will store the final destination path
-
-Write-Host "Searching for an existing destination directory for download..." -ForegroundColor Yellow
-
-# Iterate through the possible drive letters
-foreach ($Drive in $PossibleRootDrives) {
-    $CurrentCheckPath = Join-Path -Path $Drive -ChildPath $TargetSubPath
-    Write-Host "Checking: $CurrentCheckPath" -ForegroundColor DarkGray
-
-    if (Test-Path -Path $CurrentCheckPath -PathType Container) { # -PathType Container checks if it's a directory
-        $DestinationPath = Join-Path -Path $CurrentCheckPath -ChildPath $FileName
-        Write-Host "Found! The file will be downloaded to: $DestinationPath" -ForegroundColor Green
-        break # Found the first existing folder, exit the loop
-    }
-}
-
-# Check if a valid destination directory was found
-if ($null -eq $DestinationPath) {
-    Write-Host "Error: No existing destination directory found for 'ADA.ppkg' at the specified paths." -ForegroundColor Red
-    Write-Host "Please ensure that at least one of C:\OSDCloud\Automate\Provisioning, D:\OSDCloud\Automate\Provisioning, etc., exists." -ForegroundColor Red
-    # Decide here if the script should exit or continue with the menu display
-    # exit 1 # Uncomment this line if you want the script to exit on error without showing the menu
-} else {
-    try {
-        # Check if the file already exists, and skip download if it does
-        if (Test-Path -Path $DestinationPath) {
-            Write-Host "'$FileName' already exists at '$DestinationPath'. Download skipped." -ForegroundColor DarkYellow
-        } else {
-            Write-Host "Starting download of '$FileName' from '$SourceUrl'..." -ForegroundColor Yellow
-            Invoke-WebRequest -Uri $SourceUrl -OutFile $DestinationPath -UseBasicParsing -ErrorAction Stop
-            Write-Host "Successfully downloaded '$FileName' to '$DestinationPath'." -ForegroundColor Green
-        }
-    } catch {
-        Write-Host "An error occurred during the 'ADA.ppkg' download:" -ForegroundColor Red
-        Write-Host $_.Exception.Message -ForegroundColor Red
-        Write-Host "Please check your internet connection and the source URL." -ForegroundColor Red
-    }
-}
 
 ## Main Menu Options
 
